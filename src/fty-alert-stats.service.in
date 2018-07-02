@@ -1,0 +1,21 @@
+# This is a skeleton created by zproject.
+# You can add hand-written code here.
+
+[Unit]
+Description=fty-alert-stats service
+After=network.target
+# Requires=network.target
+# Conflicts=shutdown.target
+# PartOf=fty-alert-stats.target
+
+[Service]
+Type=simple
+# User=@uid@
+Environment="prefix=@prefix@"
+Environment='SYSTEMD_UNIT_FULLNAME=%n'
+ExecStart=@prefix@/bin/fty-alert-stats @sysconfdir@/@PACKAGE@/fty-alert-stats.cfg
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+# WantedBy=fty-alert-stats.target

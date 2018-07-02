@@ -1,0 +1,4 @@
+usr/bin/fty-alert-stats
+etc/fty-alert-stats/fty-alert-stats.cfg
+lib/systemd/system/fty-alert-stats.service
+
