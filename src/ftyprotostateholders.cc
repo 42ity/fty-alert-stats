@@ -28,6 +28,8 @@ static void fty_proto_destroy_wrapper(fty_proto_t *p)
 
 void FtyAssetStateHolder::processAsset(fty_proto_t *asset)
 {
+    FtyProto ftyProto(asset, fty_proto_destroy_wrapper);
+
     const char *operation = fty_proto_operation(asset);
     const char *name = fty_proto_name(asset);
 
@@ -37,23 +39,21 @@ void FtyAssetStateHolder::processAsset(fty_proto_t *asset)
                 m_assets.erase(name);
                 callbackAssetPost(asset);
             }
-            fty_proto_destroy_wrapper(asset);
         }
         else {
             if (callbackAssetPre(asset))
             {
-                m_assets[name] = FtyProto(asset, fty_proto_destroy_wrapper);
+                m_assets[name] = FtyProto(fty_proto_dup(asset), fty_proto_destroy_wrapper);
                 callbackAssetPost(asset);
             }
         }
-    }
-    else {
-        fty_proto_destroy_wrapper(asset);
     }
 }
 
 void FtyAlertStateHolder::processAlert(fty_proto_t *alert)
 {
+    FtyProto ftyProto(alert, fty_proto_destroy_wrapper);
+
     const char *state = fty_proto_state(alert);
     const char *rule = fty_proto_rule(alert);
 
@@ -64,18 +64,14 @@ void FtyAlertStateHolder::processAlert(fty_proto_t *alert)
                 m_alerts.erase(rule);
                 callbackAlertPost(alert);
             }
-            fty_proto_destroy_wrapper(alert);
         }
         else {
             if (callbackAlertPre(alert))
             {
-                m_alerts[rule] = FtyProto(alert, fty_proto_destroy_wrapper);
+                m_alerts[rule] = FtyProto(fty_proto_dup(alert), fty_proto_destroy_wrapper);
                 callbackAlertPost(alert);
             }
         }
-    }
-    else {
-        fty_proto_destroy_wrapper(alert);
     }
 }
 
