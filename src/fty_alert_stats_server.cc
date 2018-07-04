@@ -119,19 +119,17 @@ AlertStatsServer::AlertStatsServer(zsock_t *pipe, const char *endpoint, int64_t 
       m_lastResync(INT64_MAX - RESYNC_INTERVAL)
 {
     if (mlm_client_set_consumer(m_client, FTY_PROTO_STREAM_ASSETS, ".*") == -1) {
-        log_error ("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.",
-                FTY_PROTO_STREAM_ASSETS, ".*");
+        log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ASSETS, ".*");
         throw std::runtime_error("Can't set client consumer");
     }
 
     if (mlm_client_set_consumer(m_client, FTY_PROTO_STREAM_ALERTS, ".*") == -1) {
-        log_error ("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.",
-                FTY_PROTO_STREAM_ALERTS, ".*");
+        log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ALERTS, ".*");
         throw std::runtime_error("Can't set client consumer");
     }
 
     if (mlm_client_set_producer(m_client, FTY_PROTO_STREAM_METRICS) == -1) {
-        log_error ("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
+        log_error("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
         throw std::runtime_error("Can't set client producer");
     } 
 }
@@ -203,7 +201,7 @@ void AlertStatsServer::recomputeAlerts()
 {
     if (isReady()) {
         // Don't spam if we're not sending stats
-        log_info("Refreshing all statistics.");
+        log_trace("Recomputing all statistics...");
     }
 
     // Recompute and resend/refresh metrics with our current data
@@ -215,8 +213,15 @@ void AlertStatsServer::recomputeAlerts()
     for (FtyProtoCollection::value_type &i : m_alerts) {
         recomputeAlert(i.second.get(), nullptr);
     }
+    if (isReady()) {
+        log_trace("Finished recomputing statistics, publishing all metrics...");
+    }
     for (auto &i : m_alertCounts) {
         sendMetric(i, false);
+    }
+
+    if (isReady()) {
+        log_info("All metrics published.");
     }
 }
 
@@ -354,7 +359,7 @@ void AlertStatsServer::drainOutstandingAssetQueries()
     const int MAX_OUTSTANDING_QUERIES = 32;
 
     while ((m_outstandingAssetQueries < MAX_OUTSTANDING_QUERIES) && !m_assetQueries.empty()) {
-        log_trace("Query details of asset %s", m_assetQueries.back().c_str());
+        log_trace("Query details of asset %s...", m_assetQueries.back().c_str());
 
         zmsg_t *queryMsg = zmsg_new();
         zmsg_addstr(queryMsg, "GET");
@@ -384,13 +389,13 @@ void AlertStatsServer::startResynchronization()
      * reset on completion of subtasks. To prevent deadlocking on lost
      * answers, we force the flags back to true if the agent ticks.
      *
-     * Note that this will enable periodic data resynchronization too every
-     *  In self-
+     * Note that this will enable periodic data resynchronization too. In self-
      * test mode this method will not ever get called (so as to test only tally
      * keeping), but in real-life we trigger this method on start-up.
      */
-    log_info("Agent is resynchronizing data.");
+    log_info("Agent is resynchronizing data...");
 
+    log_info("Querying list of assets...");
     m_assets.clear();
     zmsg_t *msg = zmsg_new();
     zmsg_addstr(msg, "GET");
@@ -433,7 +438,7 @@ bool AlertStatsServer::tick()
      * when we enter here.
      */
     if (!isReady()) {
-        log_info("Agent was stuck resynchronizing data when entering tick, unwedge it.");
+        log_info("Agent was stuck resynchronizing data when entering tick, unwedging it.");
         m_readyAssets = true;
         m_readyAlerts = true;
 
@@ -469,6 +474,9 @@ bool AlertStatsServer::handlePipe(zmsg_t *message)
     else if (streq(actor_command, "_QUERY_STUFF")) {
         startResynchronization();
     }
+    else {
+        log_error("Unexpected pipe message '%s'.", actor_command);
+    }
 
     zstr_free(&actor_command);
     zmsg_destroy(&message);
@@ -477,69 +485,107 @@ bool AlertStatsServer::handlePipe(zmsg_t *message)
 
 bool AlertStatsServer::handleMailbox(zmsg_t *message)
 {
-    char *actor_command = zmsg_popstr(message);
+    const char *sender = mlm_client_sender(m_client);
+    const char *subject = mlm_client_subject(m_client);
+    char *actor_command = nullptr;
 
-    // Result of rfc-alerts-list query to fty-alert-list
-    if (streq(actor_command, "LIST")) {
-        // Pop message frame 'state'
-        zstr_free(&actor_command);
-        actor_command = zmsg_popstr(message);
+    // Resend all metrics
+    if (streq(subject, "REPUBLISH")) {
+        log_info("Republish query from '%s'.", sender);
+        zmsg_t *reply = zmsg_new();
 
-        while (zmsg_size(message)) {
-            // Inject each alarm into ourselves
-            zmsg_t *alertMsg = zmsg_popmsg(message);
-            fty_proto_t *alertProto = fty_proto_decode(&alertMsg);
-            if (alertProto) {
-                processAlert(alertProto);
-            }
-            else {
-                log_error("Couldn't decode alert fty_proto_t message.");
-            }
-        }
-
-        log_info("Finished querying all alerts.");
-        m_readyAlerts = true;
-
-        resynchronizationProgress();
-    }
-    // Result of ALERTS_IN_CONTAINER query to asset-agent
-    else if (streq(actor_command, "OK")) {
-        /**
-         * We have a list of asset names, but we need to query each asset
-         * details in order to get the topology. Queue the queries to perform.
-         */
-        m_outstandingAssetQueries = 0;
-        while (zmsg_size(message)) {
-            m_assetQueries.emplace_back(zmsg_popstr(message));
-        }
-
-        log_info("Querying details of %d assets...", m_assetQueries.size());
-        drainOutstandingAssetQueries();
-    }
-    // Result of ASSET_DETAIL query to asset-agent
-    else if (streq(actor_command, "_ASSET_DETAIL_RESULT")) {
-        // Inject asset into ourselves
-        zmsg_t *assetMsg = zmsg_dup(message);
-        fty_proto_t *assetProto = fty_proto_decode(&assetMsg);
-        if (assetProto) {
-            processAsset(assetProto);
+        if (isReady()) {
+            recomputeAlerts();
+            zmsg_addstr (reply, "OK");
         }
         else {
-            log_error("Couldn't decode asset fty_proto_t message.");
+            zmsg_addstr (reply, "RESYNC");
         }
 
-        --m_outstandingAssetQueries;
-        drainOutstandingAssetQueries();
+        mlm_client_sendto(m_client, sender, "REPUBLISH", NULL, 5000, &reply);
+        zmsg_destroy(&reply);
+    }
+    // Result of rfc-alerts-list query to fty-alert-list
+    else if (streq(sender, "fty-alert-list") && streq(subject, "rfc-alerts-list")) {
+        // Pop return code
+        actor_command = zmsg_popstr(message);
 
-        if (m_outstandingAssetQueries == 0) {
-            log_info("Finished querying all assets.");
-            m_readyAssets = true;
+        if (actor_command && streq(actor_command, "LIST")) {
+            // Pop message frame 'state'
+            zstr_free(&actor_command);
+            actor_command = zmsg_popstr(message);
+
+            while (zmsg_size(message)) {
+                // Inject each alarm into ourselves
+                zmsg_t *alertMsg = zmsg_popmsg(message);
+                fty_proto_t *alertProto = fty_proto_decode(&alertMsg);
+                if (alertProto) {
+                    log_trace("Injecting alert '%s'.", fty_proto_rule(alertProto));
+                    processAlert(alertProto);
+                }
+                else {
+                    log_error("Couldn't decode alert fty_proto_t message.");
+                }
+            }
+
+            log_info("Finished resync of all alerts.");
+            m_readyAlerts = true;
+
+            resynchronizationProgress();
         }
+    }
+    // Result of ASSETS_IN_CONTAINER query to asset-agent
+    else if (streq(sender, "asset-agent") && streq(subject, "ASSETS_IN_CONTAINER")) {
+        // Pop UUID
+        actor_command = zmsg_popstr(message);
 
-        resynchronizationProgress();
+        if (actor_command && streq(actor_command, "OK")) {
+            /**
+             * We have a list of asset names, but we need to query each asset
+             * details in order to get the topology. Queue the queries to perform.
+             */
+            m_outstandingAssetQueries = 0;
+            while (zmsg_size(message)) {
+                m_assetQueries.emplace_back(zmsg_popstr(message));
+            }
+
+            log_info("Received list of %d asset names, querying asset details...", m_assetQueries.size());
+            drainOutstandingAssetQueries();
+        }
+    }
+    // Result of ASSET_DETAIL query to asset-agent
+    else if (streq(sender, "asset-agent")) {
+        // Pop UUID
+        actor_command = zmsg_popstr(message);
+
+        if (actor_command && streq(actor_command, "_ASSET_DETAIL_RESULT")) {
+            // Inject asset into ourselves
+            zmsg_t *assetMsg = zmsg_dup(message);
+            fty_proto_t *assetProto = fty_proto_decode(&assetMsg);
+            if (assetProto) {
+                log_trace("Injecting asset '%s'.", fty_proto_name(assetProto));
+                processAsset(assetProto);
+            }
+            else {
+                log_error("Couldn't decode asset fty_proto_t message.");
+            }
+
+            --m_outstandingAssetQueries;
+            drainOutstandingAssetQueries();
+
+            if (m_outstandingAssetQueries == 0) {
+                log_info("Finished resync of all assets.");
+                m_readyAssets = true;
+            }
+
+            resynchronizationProgress();
+        }
+        else {
+            log_error("Unexpected mailbox message '%s' from '%s'.", subject, sender);
+        }
     }
     else {
-        log_error("Unexpected mailbox message '%s'.", actor_command);
+        log_error("Unexpected mailbox message '%s' from '%s'.", subject, sender);
     }
 
     zstr_free(&actor_command);

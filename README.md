@@ -61,7 +61,10 @@ Agent does not publish alerts.
 
 ### Mailbox requests
 
-Agent fty-alert-stats-server has no public mailbox API.
+Agent will republish all metrics when receiving mailbox message with `REPUBLISH`
+subject. Agent will reply with subject `REPUBLISH` and payload:
+ * "OK": metrics were republished.
+ * "RESYNC": agent is currently resyncing data, metrics will be republished when resync is done.
 
 ### Stream subscriptions
 
