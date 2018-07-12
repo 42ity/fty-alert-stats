@@ -19,8 +19,8 @@
     =========================================================================
 */
 
-#ifndef FTYACTOR_H_H_INCLUDED
-#define FTYACTOR_H_H_INCLUDED
+#ifndef FTY_ACTOR_H_H_INCLUDED
+#define FTY_ACTOR_H_H_INCLUDED
 
 #include "fty_alert_stats_library.h"
 

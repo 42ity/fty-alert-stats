@@ -11,10 +11,6 @@
 *.xml7
 
 # Ignore the source doc texts generated from program sources
-ftyprotostateholders.txt
-ftyprotostateholders.doc
-ftyactor.txt
-ftyactor.doc
 fty_alert_stats_server.txt
 fty_alert_stats_server.doc
 fty-alert-stats.txt

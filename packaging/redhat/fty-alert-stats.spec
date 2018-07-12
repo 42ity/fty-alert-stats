@@ -127,6 +127,7 @@ find %{buildroot} -name '*.la' | xargs rm -f
 
 %files
 %defattr(-,root,root)
+%doc README.md
 %{_bindir}/fty-alert-stats
 %{_mandir}/man1/fty-alert-stats*
 %config(noreplace) %{_sysconfdir}/fty-alert-stats/fty-alert-stats.cfg

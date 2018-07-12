@@ -8,8 +8,6 @@ include_HEADERS = \
 
 if ENABLE_DRAFTS
 include_HEADERS += \
-    ftyprotostateholders.h \
-    ftyactor.h \
     fty_alert_stats_server.h
 
 endif

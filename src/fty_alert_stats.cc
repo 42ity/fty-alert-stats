@@ -28,6 +28,12 @@
 
 #include "fty_alert_stats_classes.h"
 
+static int s_resync_timer (zloop_t *loop, int timer_id, void *output)
+{
+    zstr_send (output, "RESYNC");
+    return 0;
+}
+
 int main (int argc, char *argv [])
 {
     const char * CONFIGFILE = "";
@@ -81,8 +87,12 @@ int main (int argc, char *argv [])
     const char *endpoint = "ipc://@/malamute";
     zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
 
-    // Tell actor to fetch data
-    zstr_send (alert_stats_server, "_QUERY_STUFF");
+    // Tell actor to fetch data right away
+    zstr_send (alert_stats_server, "RESYNC");
+
+    zloop_t *resync_stream = zloop_new();
+    zloop_timer(resync_stream, AlertStatsActor::RESYNC_INTERVAL * 1000, 0, s_resync_timer, alert_stats_server);
+    zloop_start(resync_stream);
 
     //  Accept and print any message back from server
     //  copy from src/malamute.c under MPL license
@@ -97,6 +107,9 @@ int main (int argc, char *argv [])
             break;
         }
     }
+
+    zloop_destroy (&resync_stream);
     zactor_destroy (&alert_stats_server);
+
     return EXIT_SUCCESS;
 }

@@ -13,12 +13,13 @@ lib_LTLIBRARIES += src/libfty_alert_stats.la
 pkgconfig_DATA = src/libfty_alert_stats.pc
 
 src_libfty_alert_stats_la_SOURCES = \
+    src/fty_actor.cc \
+    src/fty_alert_stats_actor.cc \
+    src/fty_proto_stateholders.cc \
     src/platform.h
 
 if ENABLE_DRAFTS
 src_libfty_alert_stats_la_SOURCES += \
-    src/ftyprotostateholders.cc \
-    src/ftyactor.cc \
     src/fty_alert_stats_server.cc
 
 endif
