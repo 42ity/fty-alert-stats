@@ -6,11 +6,6 @@ include_HEADERS = \
     fty_alert_stats.h \
     fty_alert_stats_library.h
 
-if ENABLE_DRAFTS
-include_HEADERS += \
-    fty_alert_stats_server.h
-
-endif
 
 
 ################################################################################

@@ -84,7 +84,7 @@
 
     <class name = "fty_actor" private="1" selftest = "0"></class>
     <class name = "fty_alert_stats_actor" private="1" selftest = "0"></class>
-    <class name = "fty_alert_stats_server">Actor</class>
+    <class name = "fty_alert_stats_server" private="1">Actor</class>
     <class name = "fty_proto_stateholders" private="1" selftest = "0"></class>
     <main name = "fty-alert-stats" service = "1">Binary</main>
 
