@@ -40,33 +40,6 @@ Build-Depends: debhelper (>= 9),
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
-Package: libfty-alert-stats0
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: fty-alert-stats shared library
- This package contains shared library for fty-alert-stats:
- agent for computing aggregate statistics on alerts
-
-Package: libfty-alert-stats-dev
-Architecture: any
-Section: libdevel
-Depends:
-    ${misc:Depends},
-    libsodium-dev,
-    libzmq3-dev,
-    libczmq-dev,
-    libmlm-dev,
-    libfty-proto-dev,
-    liblog4cplus-dev,
-    libcxxtools-dev,
-    libtntnet-dev,
-    libtntdb-dev,
-    libsasl2-dev,
-    libfty-common-dev,
-    libfty-alert-stats0 (= ${binary:Version})
-Description: fty-alert-stats development tools
- This package contains development files for fty-alert-stats:
- agent for computing aggregate statistics on alerts
 
 Package: fty-alert-stats
 Architecture: any

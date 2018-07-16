@@ -28,10 +28,19 @@
 
 #include "fty_alert_stats_classes.h"
 
+static int s_resync_timer (zloop_t *loop, int timer_id, void *output)
+{
+    zstr_send (output, "RESYNC");
+    return 0;
+}
+
 int main (int argc, char *argv [])
 {
     const char * CONFIGFILE = "";
     const char * LOGCONFIGFILE = "";
+    const char * metricTTL = "";
+    const char * tickPeriod = "";
+    const char * resyncPeriod = "43200";
     
     ftylog_setInstance("fty-alert-stats","");
     bool verbose = false;
@@ -60,14 +69,23 @@ int main (int argc, char *argv [])
             return 1;
         }
     }
+
     //  Insert main code here
     if (!streq(CONFIGFILE,"")) {
+        log_info ("Loading config file '%s'...", CONFIGFILE);
         zconfig_t *cfg = zconfig_load(CONFIGFILE);
         if (cfg) {
             LOGCONFIGFILE = zconfig_get(cfg, "log/config", "");
+            metricTTL = zconfig_get(cfg, "agent/metric_ttl", metricTTL);
+            tickPeriod = zconfig_get(cfg, "agent/tick_period", tickPeriod);
+            resyncPeriod = zconfig_get(cfg, "agent/resync_period", resyncPeriod);
+            log_info ("Config file loaded.", CONFIGFILE);
+        }
+        else {
+            log_info ("Couldn't load config file.", CONFIGFILE);
         }
     }
-        
+
     if (!streq(LOGCONFIGFILE,"")) {
         ftylog_setConfigFile(ftylog_getInstance(),LOGCONFIGFILE);
     }
@@ -81,22 +99,38 @@ int main (int argc, char *argv [])
     const char *endpoint = "ipc://@/malamute";
     zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
 
-    // Tell actor to fetch data
-    zstr_send (alert_stats_server, "_QUERY_STUFF");
+    // Send configuration to agent
+    if (!streq(metricTTL,""))
+    {
+        zstr_sendm (alert_stats_server, "METRIC_TTL");
+        zstr_send (alert_stats_server, metricTTL);
+    }
+    if (!streq(tickPeriod,""))
+    {
+        zstr_sendm (alert_stats_server, "TICK_PERIOD");
+        zstr_send (alert_stats_server, tickPeriod);
+    }
 
-    //  Accept and print any message back from server
-    //  copy from src/malamute.c under MPL license
-    while (true) {
-        char *message = zstr_recv (alert_stats_server);
-        if (message) {
-            puts (message);
-            free (message);
-        }
-        else {
-            log_info ("interrupted");
-            break;
+    // Tell actor to fetch data right away
+    zstr_send (alert_stats_server, "RESYNC");
+
+    // Periodically resync actor
+    zloop_t *resync_stream = zloop_new();
+    zloop_timer(resync_stream, atol(resyncPeriod) * 1000, 0, s_resync_timer, alert_stats_server);
+    zloop_start(resync_stream);
+
+    while (!zsys_interrupted) {
+        zmsg_t *msg = zmsg_recv (alert_stats_server);
+        if (msg) {
+            char *cmd = zmsg_popstr (msg);
+            zsys_debug ("main: %s received", cmd ? cmd : "(null)");
+            zstr_free (&cmd);
+            zmsg_destroy (&msg);
         }
     }
+
+    zloop_destroy (&resync_stream);
     zactor_destroy (&alert_stats_server);
+
     return EXIT_SUCCESS;
 }

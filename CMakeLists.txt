@@ -236,15 +236,11 @@ message(STATUS "Detected FTY_ALERT_STATS Version - ${FTY_ALERT_STATS_VERSION}")
 set (fty_alert_stats_headers
     include/fty_alert_stats_library.h
     include/fty_alert_stats.h
+    src/fty_actor.h
+    src/fty_alert_stats_actor.h
+    src/fty_alert_stats_server.h
+    src/fty_proto_stateholders.h
 )
-
-IF (ENABLE_DRAFTS)
-    list(APPEND fty_alert_stats_headers
-        include/ftyprotostateholders.h
-        include/ftyactor.h
-        include/fty_alert_stats_server.h
-    )
-ENDIF (ENABLE_DRAFTS)
 
 source_group ("Header Files" FILES ${fty_alert_stats_headers})
 install(FILES ${fty_alert_stats_headers} DESTINATION include)
@@ -256,16 +252,11 @@ install(FILES ${fty_alert_stats_headers} DESTINATION include)
 
 include_directories("${SOURCE_DIR}/src" "${SOURCE_DIR}/include")
 set (fty_alert_stats_sources
+    src/fty_actor.cc
+    src/fty_alert_stats_actor.cc
+    src/fty_alert_stats_server.cc
+    src/fty_proto_stateholders.cc
 )
-
-IF (ENABLE_DRAFTS)
-    list (APPEND fty_alert_stats_sources
-        src/ftyprotostateholders.cc
-        src/ftyactor.cc
-        src/fty_alert_stats_server.cc
-    )
-ENDIF (ENABLE_DRAFTS)
-
 IF (ENABLE_DRAFTS)
     list (APPEND fty_alert_stats_sources
         src/fty_alert_stats_private_selftest.cc
@@ -513,14 +504,6 @@ endif()
 
 set(TEST_CLASSES
 )
-
-IF (ENABLE_DRAFTS)
-    list (APPEND TEST_CLASSES
-    ftyprotostateholders
-    ftyactor
-    fty_alert_stats_server
-    )
-ENDIF (ENABLE_DRAFTS)
 
 IF (ENABLE_DRAFTS)
     list (APPEND TEST_CLASSES

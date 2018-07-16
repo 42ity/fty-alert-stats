@@ -67,47 +67,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %description
 fty-alert-stats agent for computing aggregate statistics on alerts.
 
-%package -n libfty_alert_stats0
-Group:          System/Libraries
-Summary:        agent for computing aggregate statistics on alerts shared library
-
-%description -n libfty_alert_stats0
-This package contains shared library for fty-alert-stats: agent for computing aggregate statistics on alerts
-
-%post -n libfty_alert_stats0 -p /sbin/ldconfig
-%postun -n libfty_alert_stats0 -p /sbin/ldconfig
-
-%files -n libfty_alert_stats0
-%defattr(-,root,root)
-%{_libdir}/libfty_alert_stats.so.*
-
-%package devel
-Summary:        agent for computing aggregate statistics on alerts
-Group:          System/Libraries
-Requires:       libfty_alert_stats0 = %{version}
-Requires:       libsodium-devel
-Requires:       zeromq-devel
-Requires:       czmq-devel
-Requires:       malamute-devel
-Requires:       fty-proto-devel
-Requires:       log4cplus-devel
-Requires:       cxxtools-devel
-Requires:       tntnet-devel
-Requires:       tntdb-devel
-Requires:       cyrus-sasl-devel
-Requires:       fty-common-devel
-
-%description devel
-agent for computing aggregate statistics on alerts development tools
-This package contains development files for fty-alert-stats: agent for computing aggregate statistics on alerts
-
-%files devel
-%defattr(-,root,root)
-%{_includedir}/*
-%{_libdir}/libfty_alert_stats.so
-%{_libdir}/pkgconfig/libfty_alert_stats.pc
-%{_mandir}/man3/*
-%{_mandir}/man7/*
 
 %prep
 
@@ -127,6 +86,7 @@ find %{buildroot} -name '*.la' | xargs rm -f
 
 %files
 %defattr(-,root,root)
+%doc README.md
 %{_bindir}/fty-alert-stats
 %{_mandir}/man1/fty-alert-stats*
 %config(noreplace) %{_sysconfdir}/fty-alert-stats/fty-alert-stats.cfg
