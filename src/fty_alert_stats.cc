@@ -94,17 +94,13 @@ int main (int argc, char *argv [])
     zloop_timer(resync_stream, AlertStatsActor::RESYNC_INTERVAL * 1000, 0, s_resync_timer, alert_stats_server);
     zloop_start(resync_stream);
 
-    //  Accept and print any message back from server
-    //  copy from src/malamute.c under MPL license
-    while (true) {
-        char *message = zstr_recv (alert_stats_server);
-        if (message) {
-            puts (message);
-            free (message);
-        }
-        else {
-            log_info ("interrupted");
-            break;
+    while (!zsys_interrupted) {
+        zmsg_t *msg = zmsg_recv (alert_stats_server);
+        if (msg) {
+            char *cmd = zmsg_popstr (msg);
+            zsys_debug ("main: %s received", cmd ? cmd : "(null)");
+            zstr_free (&cmd);
+            zmsg_destroy (&msg);
         }
     }
 
