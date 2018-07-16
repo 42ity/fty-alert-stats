@@ -38,7 +38,8 @@ AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t po
       m_outstandingAssetQueries(),
       m_readyAssets(true),
       m_readyAlerts(true),
-      m_lastResync(0)
+      m_lastResync(0),
+      m_metricTTL(12 * 60)
 {
     if (mlm_client_set_consumer(m_client, FTY_PROTO_STREAM_ASSETS, ".*") == -1) {
         log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ASSETS, ".*");
@@ -239,7 +240,7 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
     msg = fty_proto_encode_metric(
         nullptr,
         metric.second.lastSent,
-        AlertCount::TTL,
+        m_metricTTL,
         WARNING_METRIC,
         metric.first.c_str(),
         std::to_string(metric.second.warning).c_str(),
@@ -250,7 +251,7 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
     msg = fty_proto_encode_metric(
         nullptr,
         metric.second.lastSent,
-        AlertCount::TTL,
+        m_metricTTL,
         CRITICAL_METRIC,
         metric.first.c_str(),
         std::to_string(metric.second.critical).c_str(),
@@ -312,7 +313,6 @@ void AlertStatsActor::startResynchronization()
      * answers, we force the flags back to true if the agent ticks while in this
      * state for too long.
      */
-    log_info("Agent is resynchronizing data...");
 
     log_info("Querying list of assets...");
     m_assets.clear();
@@ -354,7 +354,7 @@ bool AlertStatsActor::tick()
 
     /**
      * As a safety precaution, unwedge the agent if it's stuck resynchronizing
-     * when we enter here for too long.
+     * for at least one complete poller timespan.
      */
     if (!isReady() && (zclock_mono()/1000 > m_lastResync + m_pollerTimeout*2)) {
         log_info("Agent was stuck resynchronizing data when entering tick, unwedging it...");
@@ -367,7 +367,7 @@ bool AlertStatsActor::tick()
     // Refresh all alerts
     int64_t curClock = zclock_time()/1000;
     for (auto &i : m_alertCounts) {
-        if ((i.second.lastSent + AlertCount::TTL/2) <= curClock) {
+        if ((i.second.lastSent + m_metricTTL/2) <= curClock) {
             sendMetric(i, false);
         }
     }
@@ -386,7 +386,26 @@ bool AlertStatsActor::handlePipe(zmsg_t *message)
     }
     // Resynchronize ourselves with the rest of the world
     else if (streq(actor_command, "RESYNC")) {
+        log_info("Agent is resynchronizing data...");
         startResynchronization();
+    }
+    // Set metric TTL value
+    else if (streq(actor_command, "METRIC_TTL")) {
+        char *data = zmsg_popstr(message);
+        if (data) {
+            m_metricTTL = atol(data);
+            log_info("Set metric TTL to %" PRIi64 ".", m_metricTTL);
+        }
+        zstr_free(&data);
+    }
+    // Set tick period value
+    else if (streq(actor_command, "TICK_PERIOD")) {
+        char *data = zmsg_popstr(message);
+        if (data) {
+            m_pollerTimeout = atol(data) * 1000;
+            log_info("Set tick period to %" PRIi64 ".", m_pollerTimeout / 1000);
+        }
+        zstr_free(&data);
     }
     else {
         log_error("Unexpected pipe message '%s'.", actor_command);

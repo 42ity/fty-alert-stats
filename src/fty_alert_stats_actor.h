@@ -44,7 +44,7 @@
 class AlertStatsActor : public FtyActor, private FtyAlertStateHolder, private FtyAssetStateHolder
 {
 public:
-    AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout = AlertCount::TTL/4 * 1000);
+    AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout = 180 * 1000);
     virtual ~AlertStatsActor() = default;
 
 private:
@@ -66,8 +66,6 @@ private:
             lastSent = 0; // Invalidate lastSent
             return *this;
         }
-
-        const static int64_t TTL = 12 * 60;
     };
 
     typedef std::map<std::string, AlertCount> AlertCounts;
@@ -98,11 +96,11 @@ private:
     bool m_readyAlerts;
     int64_t m_lastResync;
 
+    int64_t m_metricTTL;
+
 public:
     constexpr static const char *WARNING_METRIC = "alerts.warning";
     constexpr static const char *CRITICAL_METRIC = "alerts.critical";
-
-    constexpr static const int64_t RESYNC_INTERVAL = AlertCount::TTL * 60;
 };
 
 

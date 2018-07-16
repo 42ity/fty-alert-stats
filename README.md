@@ -73,6 +73,12 @@ asset-agent (fty-asset) to synchronize itself with the rest of the system.
 Failure to synchronize is not fatal, but the agent will not be able
 to compute meaningful statistics before its first successful synchronization.
 
+When receiving `METRIC_TTL` on its pipe, agent will set metric TTL to the value
+contained in the second frame of the message (in seconds).
+
+When receiving `TICK_PERIOD` on its pipe, agent will set ticking period to the
+value contained in the second frame of the message (in seconds).
+
 ### Stream subscriptions
 
 Agent is subscribed to ALERTS and ASSETS streams and publishes to METRICS.

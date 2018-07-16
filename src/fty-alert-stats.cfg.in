@@ -7,3 +7,7 @@ server
     background = 0      #   Run as background process
     workdir = .         #   Working directory for daemon
     verbose = 0         #   Do verbose logging of activity?
+agent
+#    metric_ttl = 720       #   TTL of metrics published
+#    tick_period = 180      #   Period of tick, should be <= metric_ttl / 4
+#    resync_period = 43200  #   Period of resynchronization

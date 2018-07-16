@@ -38,6 +38,9 @@ int main (int argc, char *argv [])
 {
     const char * CONFIGFILE = "";
     const char * LOGCONFIGFILE = "";
+    const char * metricTTL = "";
+    const char * tickPeriod = "";
+    const char * resyncPeriod = "43200";
     
     ftylog_setInstance("fty-alert-stats","");
     bool verbose = false;
@@ -66,14 +69,23 @@ int main (int argc, char *argv [])
             return 1;
         }
     }
+
     //  Insert main code here
     if (!streq(CONFIGFILE,"")) {
+        log_info ("Loading config file '%s'...", CONFIGFILE);
         zconfig_t *cfg = zconfig_load(CONFIGFILE);
         if (cfg) {
             LOGCONFIGFILE = zconfig_get(cfg, "log/config", "");
+            metricTTL = zconfig_get(cfg, "agent/metric_ttl", metricTTL);
+            tickPeriod = zconfig_get(cfg, "agent/tick_period", tickPeriod);
+            resyncPeriod = zconfig_get(cfg, "agent/resync_period", resyncPeriod);
+            log_info ("Config file loaded.", CONFIGFILE);
+        }
+        else {
+            log_info ("Couldn't load config file.", CONFIGFILE);
         }
     }
-        
+
     if (!streq(LOGCONFIGFILE,"")) {
         ftylog_setConfigFile(ftylog_getInstance(),LOGCONFIGFILE);
     }
@@ -87,11 +99,24 @@ int main (int argc, char *argv [])
     const char *endpoint = "ipc://@/malamute";
     zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
 
+    // Send configuration to agent
+    if (!streq(metricTTL,""))
+    {
+        zstr_sendm (alert_stats_server, "METRIC_TTL");
+        zstr_send (alert_stats_server, metricTTL);
+    }
+    if (!streq(tickPeriod,""))
+    {
+        zstr_sendm (alert_stats_server, "TICK_PERIOD");
+        zstr_send (alert_stats_server, tickPeriod);
+    }
+
     // Tell actor to fetch data right away
     zstr_send (alert_stats_server, "RESYNC");
 
+    // Periodically resync actor
     zloop_t *resync_stream = zloop_new();
-    zloop_timer(resync_stream, AlertStatsActor::RESYNC_INTERVAL * 1000, 0, s_resync_timer, alert_stats_server);
+    zloop_timer(resync_stream, atol(resyncPeriod) * 1000, 0, s_resync_timer, alert_stats_server);
     zloop_start(resync_stream);
 
     while (!zsys_interrupted) {
