@@ -40,6 +40,12 @@ Build-Depends: debhelper (>= 9),
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
+Package: libfty-alert-stats0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: fty-alert-stats shared library
+ This package contains shared library for fty-alert-stats:
+ agent for computing aggregate statistics on alerts.
 
 Package: fty-alert-stats
 Architecture: any
