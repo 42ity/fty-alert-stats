@@ -33,7 +33,11 @@ systemctl start fty-alert-stats
 
 ### Configuration file
 
-Configuration file - fty-alert-stats.cfg - is currently ignored.
+Configuration file - fty-alert-stats.cfg - supports the following entries:
+
+* agent/metric_ttl: TTL of published metrics (in seconds)
+* agent/tick_period: Period of agent ticking (in seconds), should be <= metric_ttl / 4
+* resync_period: Time between resynchronizations (in seconds)
 
 ## Architecture
 
