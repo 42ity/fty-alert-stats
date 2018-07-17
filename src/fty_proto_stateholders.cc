@@ -83,7 +83,7 @@ void FtyAlertStateHolder::purgeExpiredAlerts()
         fty_proto_t *proto = it->second.get();
         it++;
 
-        if ((fty_proto_time(proto) + fty_proto_ttl(proto)) < (zclock_mono()/1000)) {
+        if ((fty_proto_time(proto) + fty_proto_ttl(proto)) < (uint64_t)(zclock_mono()/1000)) {
             fty_proto_t *dup = fty_proto_dup(proto);
             fty_proto_set_state(dup, "RESOLVED");
             processAlert(dup);
