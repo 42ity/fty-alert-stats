@@ -66,10 +66,8 @@ bool AlertStatsActor::callbackAssetPre(fty_proto_t *asset)
     if (streq(operation, FTY_PROTO_ASSET_OP_INVENTORY)) {
         return false;
     }
-    else if (streq(operation, FTY_PROTO_ASSET_OP_UPDATE))
-    {
-        if (m_assets.count(name))
-        {
+    else if (streq(operation, FTY_PROTO_ASSET_OP_UPDATE)) {
+        if (m_assets.count(name)) {
             fty_proto_t *oldAsset = m_assets[name].get();
 
             // We only care about topology, ignore update if the asset has not been reparented
@@ -89,15 +87,35 @@ void AlertStatsActor::callbackAssetPost(fty_proto_t *asset)
 {
     /**
      * An asset has been modified, trigger recompute.
-     *
-     * Since the topology itself of the assets has been altered when we get
-     * called, we trigger a complete recompute of the alert tallies and
-     * republication of the associated metrics. We could do a better job at
-     * tracking what happened, but unless there's a huge datacenter that is
-     * being thoroughly scrambled around at the speed of sound we shouldn't
-     * cause a meltdown.
      */
-    recomputeAlerts();
+    const char *name = fty_proto_name(asset);
+    const char *operation = fty_proto_operation(asset);
+
+    if (streq(operation, FTY_PROTO_ASSET_OP_CREATE)) {
+        m_alertCounts[name] = AlertCount();
+        bool mustRecurse = false;
+
+        // Just update alerts attached to the asset.
+        for (FtyProtoCollection::value_type &i : m_alerts) {
+            if (streq(fty_proto_name(i.second.get()), name)) {
+                recomputeAlert(i.second.get(), nullptr);
+                mustRecurse = true;
+            }
+        }
+        
+        sendMetric(*(m_alertCounts.find(name)), mustRecurse);
+    }
+    else {
+        /**
+         * Since the topology itself of the assets has been altered when we get
+         * here, we trigger a complete recompute of the alert tallies and
+         * republication of the associated metrics. We could do a better job at
+         * tracking what happened, but unless there's a huge datacenter that is
+         * being thoroughly scrambled around at the speed of sound we shouldn't
+         * cause a meltdown.
+         */
+        recomputeAlerts();
+    }
 }
 
 bool AlertStatsActor::callbackAlertPre(fty_proto_t *alert)

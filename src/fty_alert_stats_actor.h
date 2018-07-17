@@ -66,6 +66,14 @@ private:
             lastSent = 0; // Invalidate lastSent
             return *this;
         }
+
+        AlertCount& operator=(const AlertCount& ac)
+        {
+            critical = ac.critical;
+            warning = ac.warning;
+            lastSent = ac.lastSent;
+            return *this;
+        }
     };
 
     typedef std::map<std::string, AlertCount> AlertCounts;

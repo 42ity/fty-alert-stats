@@ -251,7 +251,45 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")
             },
             TestCase::Action::CHECK_METRICS
-        }
+        },
+        {
+            "Create rackcontroller-1 (with no known alerts)",
+            {
+                buildAssetMsg("rackcontroller-1", FTY_PROTO_ASSET_OP_CREATE, {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+            },
+            {},
+            {
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-1", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-1", "0", "")
+            },
+            TestCase::Action::CHECK_METRICS
+        },
+        {
+            "Publish WARNING alert1@rackcontroller-2 (unknown asset)",
+            {},
+            {
+                fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-2", "rackcontroller-2", "ACTIVE", "WARNING", "", nullptr)
+            },
+            {
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
+            },
+            TestCase::Action::CHECK_METRICS
+        },
+        {
+            "Create rackcontroller-2 (with known alerts)",
+            {
+                buildAssetMsg("rackcontroller-2", FTY_PROTO_ASSET_OP_CREATE, {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+            },
+            {},
+            {
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")
+            },
+            TestCase::Action::CHECK_METRICS
+        },
     };
 
     //  @selftest
