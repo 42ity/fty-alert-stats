@@ -28,10 +28,26 @@
 
 #include "fty_alert_stats_classes.h"
 
+static zactor_t *alert_stats_server;
+
 static int s_resync_timer (zloop_t *loop, int timer_id, void *output)
 {
     zstr_send (output, "RESYNC");
     return 0;
+}
+
+static int s_resync_actor_pipe (zloop_t *loop, zsock_t *reader, void *arg)
+{
+    return -1;
+}
+
+static void s_resync_actor (zsock_t *pipe, void* resyncPeriod)
+{
+    zloop_t *resync_loop = zloop_new();
+    zloop_timer(resync_loop, atol((const char*)resyncPeriod) * 1000, 0, s_resync_timer, alert_stats_server);
+    zloop_reader(resync_loop, pipe, s_resync_actor_pipe, nullptr);
+    zloop_start(resync_loop);
+    zloop_destroy(&resync_loop);
 }
 
 int main (int argc, char *argv [])
@@ -97,7 +113,7 @@ int main (int argc, char *argv [])
     }
     log_info ("fty-alert-stats starting");
     const char *endpoint = "ipc://@/malamute";
-    zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
+    alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
 
     // Send configuration to agent
     if (!streq(metricTTL,""))
@@ -115,9 +131,7 @@ int main (int argc, char *argv [])
     zstr_send (alert_stats_server, "RESYNC");
 
     // Periodically resync actor
-    zloop_t *resync_stream = zloop_new();
-    zloop_timer(resync_stream, atol(resyncPeriod) * 1000, 0, s_resync_timer, alert_stats_server);
-    zloop_start(resync_stream);
+    zactor_t *resync_actor = zactor_new (s_resync_actor, const_cast<char*>(resyncPeriod));
 
     while (!zsys_interrupted) {
         zmsg_t *msg = zmsg_recv (alert_stats_server);
@@ -129,7 +143,7 @@ int main (int argc, char *argv [])
         }
     }
 
-    zloop_destroy (&resync_stream);
+    zactor_destroy (&resync_actor);
     zactor_destroy (&alert_stats_server);
 
     return EXIT_SUCCESS;
