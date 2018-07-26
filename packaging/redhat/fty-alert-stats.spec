@@ -55,13 +55,14 @@ BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
-BuildRequires:  fty-proto-devel
 BuildRequires:  log4cplus-devel
+BuildRequires:  fty-common-logging-devel
 BuildRequires:  cxxtools-devel
 BuildRequires:  tntnet-devel
 BuildRequires:  tntdb-devel
 BuildRequires:  cyrus-sasl-devel
 BuildRequires:  fty-common-devel
+BuildRequires:  fty-proto-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description

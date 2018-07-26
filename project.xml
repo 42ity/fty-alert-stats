@@ -42,22 +42,24 @@
         release = "1.0-FTY-master"
         />
 
-    <use project = "fty-proto" libname = "libfty_proto" header="ftyproto.h" prefix="fty_proto"
-        min_major = "1" min_minor = "0" min_patch = "0"
-        repository = "https://github.com/42ity/fty-proto.git"
-        test = "fty_proto_test" >
-        <use project = "malamute" />
-    </use>
-
-    <use project = "fty-common" libname = "libfty_common" header="fty-common/log/fty_log.h"
-        repository = "https://github.com/42ity/fty-common.git"
-        test = "fty_commmon_selftest" >
+    <!-- Note: fty-common-logging MUST be detailed before fty-proto -->
+    <use project = "fty-common-logging" libname = "libfty_common_logging" header="fty_log.h"
+        repository = "https://github.com/42ity/fty-common-logging.git"
+        test = "fty_commmon_logging_selftest" >
 
         <use project = "log4cplus" header = "log4cplus/logger.h"
             test = "appender_test"
             release="1.1.2-FTY-master"
             repository="https://github.com/42ity/log4cplus.git"
             />
+    </use>
+
+    <!-- TODO: Trim the list below based on needs of particular component -->
+    <!-- TODO: As the work on separate fty-common(-db|-mlm|-rest|) would be
+         completed, use those explicitly instead as needed by the component -->
+    <use project = "fty-common" libname = "libfty_common" header="fty_common.h"
+        repository = "https://github.com/42ity/fty-common.git"
+        test = "fty_commmon_selftest" >
 
         <use project = "cxxtools" test="cxxtools::Utf8Codec::Utf8Codec" header="cxxtools/allocator.h"
             repository = "https://github.com/42ity/cxxtools.git"
@@ -80,6 +82,13 @@
             debian_name="libsasl2-dev"
             redhat_name="cyrus-sasl-devel"
             />
+    </use>
+
+    <use project = "fty-proto" libname = "libfty_proto" header="ftyproto.h" prefix="fty_proto"
+        min_major = "1" min_minor = "0" min_patch = "0"
+        repository = "https://github.com/42ity/fty-proto.git"
+        test = "fty_proto_test" >
+        <use project = "malamute" />
     </use>
 
     <class name = "fty_actor" private="1" selftest = "0"></class>
