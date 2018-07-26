@@ -1,5 +1,6 @@
 #
 #    fty-alert-stats - Agent for computing aggregate statistics on alerts
+# Note: this file is customized after zproject generation, be sure to keep it
 #
 #    Copyright (C) 2014 - 2018 Eaton
 #
@@ -40,6 +41,9 @@ Build-Depends: debhelper (>= 9),
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
+# Customization over zproject-generated code follows
+# to add the shared-lib package.
+# TODO: coerce project.xml into doing it automatically.
 Package: libfty-alert-stats0
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
