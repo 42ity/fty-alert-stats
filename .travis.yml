@@ -17,8 +17,9 @@ os:
 # in the default container with sudo==false, consider requiring a docker
 # image and/or a newer Ubuntu Trusty baseline VM, by uncommenting below.
 # See the current docs on http://travis-ci.org for up-to-date options.
-sudo: false
-#sudo: required
+# NOTE: Here we need this for .travis.fix* script(s) below.
+#sudo: false
+sudo: required
 
 #dist:
 #- trusty
@@ -153,6 +154,10 @@ matrix:
 before_install:
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
+
+### Note: Fix up SASL pkgconfig before build
+before_script:
+- ./.travis.fixsasl
 
 # Hand off to generated script for each BUILD_TYPE
 script: ./ci_build.sh
