@@ -32,8 +32,9 @@
 //  External dependencies
 #include <czmq.h>
 #include <malamute.h>
+#include <fty_log.h>
+#include <fty_common.h>
 #include <ftyproto.h>
-#include <fty-common/log/fty_log.h>
 
 //  FTY_ALERT_STATS version macros for compile-time API detection
 #define FTY_ALERT_STATS_VERSION_MAJOR 1
