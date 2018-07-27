@@ -54,36 +54,6 @@
             />
     </use>
 
-    <!-- TODO: Trim the list below based on needs of particular component -->
-    <!-- TODO: As the work on separate fty-common(-db|-mlm|-rest|) would be
-         completed, use those explicitly instead as needed by the component -->
-    <use project = "fty-common" libname = "libfty_common" header="fty_common.h"
-        repository = "https://github.com/42ity/fty-common.git"
-        test = "fty_commmon_selftest" >
-
-        <use project = "cxxtools" test="cxxtools::Utf8Codec::Utf8Codec" header="cxxtools/allocator.h"
-            repository = "https://github.com/42ity/cxxtools.git"
-            release = "2.2-FTY-master"
-            />
-
-        <use project = "tntnet" optional = "1"
-            repository = "https://github.com/42ity/tntnet.git"
-            release = "2.2-FTY-master"
-            />
-
-        <use project = "tntdb"
-            test="tntdb::Date::gmtime"
-            repository = "https://github.com/42ity/tntdb.git"
-            release = "1.3-FTY-master"
-            builddir = "tntdb"
-            />
-
-        <use project = "libsasl2" header = "sasl/sasl.h"
-            debian_name="libsasl2-dev"
-            redhat_name="cyrus-sasl-devel"
-            />
-    </use>
-
     <use project = "fty-proto" libname = "libfty_proto" header="ftyproto.h" prefix="fty_proto"
         min_major = "1" min_minor = "0" min_patch = "0"
         repository = "https://github.com/42ity/fty-proto.git"

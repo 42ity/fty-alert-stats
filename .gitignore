@@ -87,10 +87,6 @@ czmq/
 malamute/
 log4cplus/
 fty-common-logging/
-cxxtools/
-tntnet/
-tntdb/
-fty-common/
 fty-proto/
 
 # Travis build area
