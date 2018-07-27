@@ -63,6 +63,19 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %description
 fty-alert-stats agent for computing aggregate statistics on alerts.
 
+%package -n libfty_alert_stats0
+Group:          System/Libraries
+Summary:        agent for computing aggregate statistics on alerts shared library
+
+%description -n libfty_alert_stats0
+This package contains shared library for fty-alert-stats: agent for computing aggregate statistics on alerts
+
+%post -n libfty_alert_stats0 -p /sbin/ldconfig
+%postun -n libfty_alert_stats0 -p /sbin/ldconfig
+
+%files -n libfty_alert_stats0
+%defattr(-,root,root)
+%{_libdir}/libfty_alert_stats.so.*
 
 %prep
 
