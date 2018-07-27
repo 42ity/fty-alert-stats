@@ -43,8 +43,18 @@ static int s_resync_actor_pipe (zloop_t *loop, zsock_t *reader, void *arg)
 
 static void s_resync_actor (zsock_t *pipe, void* resyncPeriod)
 {
+    // Parse resyncPeriod, falling back to default period on failure.
+    size_t loop_delay = 43200;
+    try {
+        loop_delay = std::stoul((const char*)resyncPeriod);
+    }
+    catch (...) {
+        log_error("Invalid resync period '%s'.", (const char*)resyncPeriod);
+    }
+    loop_delay *= 1000;
+
     zloop_t *resync_loop = zloop_new();
-    zloop_timer(resync_loop, atol((const char*)resyncPeriod) * 1000, 0, s_resync_timer, alert_stats_server);
+    zloop_timer(resync_loop, loop_delay, 0, s_resync_timer, alert_stats_server);
     zloop_reader(resync_loop, pipe, s_resync_actor_pipe, nullptr);
     zloop_start(resync_loop);
     zloop_destroy(&resync_loop);

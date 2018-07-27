@@ -411,8 +411,12 @@ bool AlertStatsActor::handlePipe(zmsg_t *message)
     else if (streq(actor_command, "METRIC_TTL")) {
         char *data = zmsg_popstr(message);
         if (data) {
-            m_metricTTL = atol(data);
-            log_info("Set metric TTL to %" PRIi64 ".", m_metricTTL);
+            try {
+                m_metricTTL = std::stoul(data);
+                log_info("Set metric TTL to %" PRIi64 ".", m_metricTTL);
+            } catch (...) {
+                log_error("Invalid metric ttl '%s'.", data);
+            }
         }
         zstr_free(&data);
     }
@@ -420,8 +424,12 @@ bool AlertStatsActor::handlePipe(zmsg_t *message)
     else if (streq(actor_command, "TICK_PERIOD")) {
         char *data = zmsg_popstr(message);
         if (data) {
-            m_pollerTimeout = atol(data) * 1000;
-            log_info("Set tick period to %" PRIi64 ".", m_pollerTimeout / 1000);
+            try {
+                m_pollerTimeout = std::stoul(data) * 1000;
+                log_info("Set tick period to %" PRIi64 ".", m_pollerTimeout / 1000);
+            } catch (...) {
+                log_error("Invalid tick period '%s'.", data);
+            }
         }
         zstr_free(&data);
     }
