@@ -57,11 +57,6 @@ BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
 BuildRequires:  log4cplus-devel
 BuildRequires:  fty-common-logging-devel
-BuildRequires:  cxxtools-devel
-BuildRequires:  tntnet-devel
-BuildRequires:  tntdb-devel
-BuildRequires:  cyrus-sasl-devel
-BuildRequires:  fty-common-devel
 BuildRequires:  fty-proto-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
@@ -75,7 +70,7 @@ fty-alert-stats agent for computing aggregate statistics on alerts.
 
 %build
 sh autogen.sh
-%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units --with-tntnet=yes
+%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units
 make %{_smp_mflags}
 
 %install

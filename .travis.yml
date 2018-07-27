@@ -59,7 +59,6 @@ env:
 
 # Prerequisite packages provided by OS distro and used "as is"
 pkg_deps_prereqs_distro: &pkg_deps_prereqs_distro
-    - libsasl2-dev
 
 # Prerequisite packages that may be built from source or used from
 # prebuilt packages of that source (usually not from an OS distro)
@@ -70,10 +69,6 @@ pkg_deps_prereqs_source: &pkg_deps_prereqs_source
     - libmlm-dev
     - log4cplus-dev
     - libfty-common-logging-dev
-    - cxxtools-dev
-    - tntnet-dev
-    - tntdb-dev
-    - libfty-common-dev
     - libfty-proto-dev
 
 # NOTE: Our forks are checked out and built without pkg dependencies in use
@@ -154,10 +149,6 @@ matrix:
 before_install:
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "android" ] ; then brew install binutils ; fi
 - if [ "$TRAVIS_OS_NAME" == "osx" -a "$BUILD_TYPE" == "valgrind" ] ; then brew install valgrind ; fi
-
-### Note: Fix up SASL pkgconfig before build
-before_script:
-- ./.travis.fixsasl
 
 # Hand off to generated script for each BUILD_TYPE
 script: ./ci_build.sh
