@@ -55,9 +55,9 @@ periodically refreshed as needed to keep them alive.
 
 ### Published metrics
 
-Agent publishes `alerts.warning@<asset>` and `alerts.critical@<asset>` metrics,
-where each metric is a count of all active alerts on the asset (and, if
-applicable, all child assets combined).
+Agent publishes `alerts.active.warning@<asset>` and
+`alerts.active.critical@<asset>` metrics, where each metric is a count of all
+active alerts on the asset (and, if applicable, all child assets combined).
 
 ### Published alerts
 

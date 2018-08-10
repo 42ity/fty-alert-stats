@@ -107,8 +107,8 @@ private:
     int64_t m_metricTTL;
 
 public:
-    constexpr static const char *WARNING_METRIC = "alerts.warning";
-    constexpr static const char *CRITICAL_METRIC = "alerts.critical";
+    constexpr static const char *WARNING_METRIC = "alerts.active.warning";
+    constexpr static const char *CRITICAL_METRIC = "alerts.active.critical";
 };
 
 
