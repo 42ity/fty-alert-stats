@@ -232,7 +232,7 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
         // Update alert count of asset and all parents
         const char *curAsset = fty_proto_name(alert);
 
-        log_trace("recomputeAlert(): alert=%s state=%s severity=%s prev_state=%s prev_severity=%s interesting.",
+        log_trace("alert=%s state=%s severity=%s prev_state=%s prev_severity=%s interesting.",
             fty_proto_rule(alert),
             state,
             severity,
@@ -241,7 +241,7 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
         );
 
         while (curAsset) {
-            log_trace("recomputeAlert(): asset=%s update count (W %d; C %d) + (W %d; C %d) = (W %d; C %d).",
+            log_trace("asset=%s update count (W %d; C %d) + (W %d; C %d) = (W %d; C %d).",
                 curAsset,
                 m_alertCounts[curAsset].warning,
                 m_alertCounts[curAsset].critical,
@@ -261,7 +261,7 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
         }
     }
     else {
-        log_trace("recomputeAlert(): alert=%s state=%s severity=%s prev_state=%s prev_severity=%s not interesting.",
+        log_trace("alert=%s state=%s severity=%s prev_state=%s prev_severity=%s not interesting.",
             fty_proto_rule(alert),
             state,
             severity,
