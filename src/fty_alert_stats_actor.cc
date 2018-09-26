@@ -142,7 +142,7 @@ void AlertStatsActor::recomputeAlerts()
 {
     if (isReady()) {
         // Don't spam if we're not sending stats
-        log_trace("Recomputing all statistics...");
+        log_debug("Recomputing all statistics...");
     }
 
     // Recompute and resend/refresh metrics with our current data
@@ -155,7 +155,7 @@ void AlertStatsActor::recomputeAlerts()
         recomputeAlert(i.second.get(), nullptr);
     }
     if (isReady()) {
-        log_trace("Finished recomputing statistics, publishing all metrics...");
+        log_debug("Finished recomputing statistics, publishing all metrics...");
     }
     for (auto &i : m_alertCounts) {
         sendMetric(i, false);
@@ -198,10 +198,10 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
     else if (prevAlert && streq(prevState, "ACTIVE") && !streq(state, "ACTIVE")) {
         r = true;
 
-        if (streq(severity, "CRITICAL")) {
+        if (streq(prevSeverity, "CRITICAL")) {
             delta.critical = -1;
         }
-        else if (streq(severity, "WARNING")) {
+        else if (streq(prevSeverity, "WARNING")) {
             delta.warning = -1;
         }
     }
@@ -225,9 +225,32 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
     }
 
     if (r) {
+        if (delta.warning == 0 && delta.critical == 0) {
+            log_error("Interesting alert but computed null delta!");
+        }
+
         // Update alert count of asset and all parents
         const char *curAsset = fty_proto_name(alert);
+
+        log_trace("recomputeAlert(): alert=%s state=%s severity=%s prev_state=%s prev_severity=%s interesting.",
+            fty_proto_rule(alert),
+            state,
+            severity,
+            prevState ? prevState : "(null)",
+            prevSeverity ? prevSeverity : "(null)"
+        );
+
         while (curAsset) {
+            log_trace("recomputeAlert(): asset=%s update count (W %d; C %d) + (W %d; C %d) = (W %d; C %d).",
+                curAsset,
+                m_alertCounts[curAsset].warning,
+                m_alertCounts[curAsset].critical,
+                delta.warning,
+                delta.critical,
+                m_alertCounts[curAsset].warning+delta.warning,
+                m_alertCounts[curAsset].critical+delta.critical
+            );
+
             m_alertCounts[curAsset] += delta;
             auto it = m_assets.find(curAsset);
             curAsset = nullptr;
@@ -236,6 +259,15 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t *alert, fty_proto_t *prevAlert)
                 curAsset = fty_proto_aux_string(it->second.get(), FTY_PROTO_ASSET_AUX_PARENT_NAME_1, nullptr);
             }
         }
+    }
+    else {
+        log_trace("recomputeAlert(): alert=%s state=%s severity=%s prev_state=%s prev_severity=%s not interesting.",
+            fty_proto_rule(alert),
+            state,
+            severity,
+            prevState ? prevState : "(null)",
+            prevSeverity ? prevSeverity : "(null)"
+        );
     }
 
     return r;
@@ -300,7 +332,7 @@ void AlertStatsActor::drainOutstandingAssetQueries()
     const int MAX_OUTSTANDING_QUERIES = 32;
 
     while ((m_outstandingAssetQueries < MAX_OUTSTANDING_QUERIES) && !m_assetQueries.empty()) {
-        log_trace("Query details of asset %s...", m_assetQueries.back().c_str());
+        log_debug("Query details of asset %s...", m_assetQueries.back().c_str());
 
         zmsg_t *queryMsg = zmsg_new();
         zmsg_addstr(queryMsg, "GET");
@@ -479,7 +511,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t *message)
                 zmsg_t *alertMsg = zmsg_popmsg(message);
                 fty_proto_t *alertProto = fty_proto_decode(&alertMsg);
                 if (alertProto) {
-                    log_trace("Injecting alert '%s'.", fty_proto_rule(alertProto));
+                    log_debug("Injecting alert '%s' state %s severity %s.", fty_proto_rule(alertProto), fty_proto_state(alertProto), fty_proto_severity(alertProto));
                     processAlert(alertProto);
                 }
                 else {
@@ -522,7 +554,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t *message)
             zmsg_t *assetMsg = zmsg_dup(message);
             fty_proto_t *assetProto = fty_proto_decode(&assetMsg);
             if (assetProto) {
-                log_trace("Injecting asset '%s'.", fty_proto_name(assetProto));
+                log_debug("Injecting asset '%s'.", fty_proto_name(assetProto));
                 processAsset(assetProto);
             }
             else {
