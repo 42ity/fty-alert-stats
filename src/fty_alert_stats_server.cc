@@ -171,7 +171,7 @@ fty_alert_stats_server_test (bool verbose)
             "Clear WARNING alert1@rackcontroller-0",
             {},
             {
-                fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-0", "rackcontroller-0", "RESOLVED", "WARNING", "", nullptr)
+                fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-0", "rackcontroller-0", "RESOLVED", "OK", "", nullptr)
             },
             {
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "0", ""),
