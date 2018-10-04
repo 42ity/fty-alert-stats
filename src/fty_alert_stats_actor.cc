@@ -283,31 +283,39 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
         return;
     }
 
-    metric.second.lastSent = zclock_time()/1000;
+    // Inhibit metrics for simple devices or fty-outage malfunctions
+    const auto& assetId = metric.first;
 
-    zmsg_t *msg;
+    if (assetId.find("datacenter-") == 0 || assetId.find("room-") == 0 || assetId.find("row-") == 0 || assetId.find("rack-") == 0) {
+        metric.second.lastSent = zclock_time()/1000;
 
-    msg = fty_proto_encode_metric(
-        nullptr,
-        metric.second.lastSent,
-        m_metricTTL,
-        WARNING_METRIC,
-        metric.first.c_str(),
-        std::to_string(metric.second.warning).c_str(),
-        "");
+        zmsg_t *msg;
 
-    mlm_client_send(m_client, (std::string(WARNING_METRIC)+"@"+metric.first).c_str(), &msg);
+        msg = fty_proto_encode_metric(
+            nullptr,
+            metric.second.lastSent,
+            m_metricTTL,
+            WARNING_METRIC,
+            assetId.c_str(),
+            std::to_string(metric.second.warning).c_str(),
+            "");
 
-    msg = fty_proto_encode_metric(
-        nullptr,
-        metric.second.lastSent,
-        m_metricTTL,
-        CRITICAL_METRIC,
-        metric.first.c_str(),
-        std::to_string(metric.second.critical).c_str(),
-        "");
+        mlm_client_send(m_client, (std::string(WARNING_METRIC)+"@"+assetId).c_str(), &msg);
 
-    mlm_client_send(m_client, (std::string(CRITICAL_METRIC)+"@"+metric.first).c_str(), &msg);
+        msg = fty_proto_encode_metric(
+            nullptr,
+            metric.second.lastSent,
+            m_metricTTL,
+            CRITICAL_METRIC,
+            assetId.c_str(),
+            std::to_string(metric.second.critical).c_str(),
+            "");
+
+        mlm_client_send(m_client, (std::string(CRITICAL_METRIC)+"@"+assetId).c_str(), &msg);
+    }
+    else {
+        metric.second.lastSent = INT64_MAX/2;
+    }
 
     if (recursive) {
         // Recursively send metric of parent

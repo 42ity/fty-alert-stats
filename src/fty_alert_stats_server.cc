@@ -130,8 +130,8 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-0", "rackcontroller-0", "ACTIVE", "WARNING", "", nullptr)
             },
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")
             },
@@ -174,8 +174,8 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-0", "rackcontroller-0", "RESOLVED", "OK", "", nullptr)
             },
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "0", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "1", "")
             },
@@ -245,8 +245,8 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-0", "rackcontroller-0", "ACTIVE", "WARNING", "", nullptr)
             },
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")
             },
@@ -259,10 +259,10 @@ fty_alert_stats_server_test (bool verbose)
             },
             {},
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-1", "0", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-1", "0", "")
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-1", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-1", "0", "")
             },
-            TestCase::Action::CHECK_METRICS
+            TestCase::Action::CHECK_NO_METRICS
         },
         {
             "Publish WARNING alert1@rackcontroller-2 (unknown asset)",
@@ -271,10 +271,10 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_encode_alert(nullptr, zclock_time()/1000, 60, "alert1@rackcontroller-2", "rackcontroller-2", "ACTIVE", "WARNING", "", nullptr)
             },
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
             },
-            TestCase::Action::CHECK_METRICS
+            TestCase::Action::CHECK_NO_METRICS
         },
         {
             "Create rackcontroller-2 (with known alerts)",
@@ -283,8 +283,8 @@ fty_alert_stats_server_test (bool verbose)
             },
             {},
             {
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
-                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+                //fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "2", ""),
                 fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")
             },
