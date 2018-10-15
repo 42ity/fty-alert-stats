@@ -56,26 +56,15 @@ BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
 BuildRequires:  log4cplus-devel
-BuildRequires:  fty-common-logging-devel
+BuildRequires:  tntnet-devel
+BuildRequires:  cyrus-sasl-devel
+BuildRequires:  fty-common-devel
 BuildRequires:  fty-proto-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
 fty-alert-stats agent for computing aggregate statistics on alerts.
 
-%package -n libfty_alert_stats0
-Group:          System/Libraries
-Summary:        agent for computing aggregate statistics on alerts shared library
-
-%description -n libfty_alert_stats0
-This package contains shared library for fty-alert-stats: agent for computing aggregate statistics on alerts
-
-%post -n libfty_alert_stats0 -p /sbin/ldconfig
-%postun -n libfty_alert_stats0 -p /sbin/ldconfig
-
-%files -n libfty_alert_stats0
-%defattr(-,root,root)
-%{_libdir}/libfty_alert_stats.so.*
 
 %prep
 
@@ -83,7 +72,7 @@ This package contains shared library for fty-alert-stats: agent for computing ag
 
 %build
 sh autogen.sh
-%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units
+%{configure} --enable-drafts=%{DRAFTS} --with-systemd-units --with-tntnet=yes
 make %{_smp_mflags}
 
 %install

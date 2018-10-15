@@ -15,7 +15,7 @@ Project fty-alert-stats aims to ... (short marketing pitch)
 It delivers several programs with their respective man pages:
  fty-alert-stats.1
 and public classes in a shared library:
- fty_alert_stats_server.3
+
 
 Generally you can compile and link against it like this:
 ----
