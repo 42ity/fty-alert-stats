@@ -10,7 +10,7 @@ To build fty-alert-stats project run:
 ./autogen.sh
 ./configure
 make
-make check # to run self-test
+make check # to run self-test 
 ```
 
 ## How to run
