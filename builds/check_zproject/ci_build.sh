@@ -13,6 +13,7 @@ git clone --quiet --depth 1 -b v3.0.2-FTY-master https://github.com/42ity/czmq.g
 git clone --quiet --depth 1 -b 1.0-FTY-master https://github.com/42ity/malamute.git malamute
 git clone --quiet --depth 1 -b release/IPM_Infra-1.4 https://github.com/42ity/cxxtools.git cxxtools
 git clone --quiet --depth 1 -b release/IPM_Infra-1.4 https://github.com/42ity/log4cplus.git log4cplus
+git clone --quiet --depth 1 -b release/IPM_Infra-1.4 https://github.com/42ity/tntdb.git tntdb
 git clone --quiet --depth 1 -b release/IPM_Infra-1.4 https://github.com/42ity/fty-common.git fty-common
 git clone --quiet --depth 1 -b release/IPM_Infra-1.4 https://github.com/42ity/fty-proto.git fty-proto
 cd -

@@ -57,7 +57,9 @@ BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
 BuildRequires:  cxxtools-devel
 BuildRequires:  log4cplus-devel
+BuildRequires:  tntdb-devel
 BuildRequires:  tntnet-devel
+BuildRequires:  openssl-devel
 BuildRequires:  cyrus-sasl-devel
 BuildRequires:  fty-common-devel
 BuildRequires:  fty-proto-devel
