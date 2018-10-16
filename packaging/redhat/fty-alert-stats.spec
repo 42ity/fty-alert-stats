@@ -55,6 +55,7 @@ BuildRequires:  libsodium-devel
 BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel
 BuildRequires:  malamute-devel
+BuildRequires:  cxxtools-devel
 BuildRequires:  log4cplus-devel
 BuildRequires:  tntnet-devel
 BuildRequires:  cyrus-sasl-devel

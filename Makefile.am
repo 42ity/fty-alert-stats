@@ -16,6 +16,7 @@ AM_CPPFLAGS = \
     ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
     ${malamute_CFLAGS} \
+    ${cxxtools_CFLAGS} \
     ${log4cplus_CFLAGS} \
     ${tntnet_CFLAGS} \
     ${libsasl2_CFLAGS} \
@@ -24,7 +25,7 @@ AM_CPPFLAGS = \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${log4cplus_LIBS} ${tntnet_LIBS} ${libsasl2_LIBS} ${fty_common_LIBS} ${fty_proto_LIBS}
+project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${cxxtools_LIBS} ${log4cplus_LIBS} ${tntnet_LIBS} ${libsasl2_LIBS} ${fty_common_LIBS} ${fty_proto_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -49,6 +50,7 @@ EXTRA_DIST += \
     Findlibzmq.cmake \
     Findczmq.cmake \
     Findmalamute.cmake \
+    Findcxxtools.cmake \
     Findlog4cplus.cmake \
     Findtntnet.cmake \
     Findlibsasl2.cmake \

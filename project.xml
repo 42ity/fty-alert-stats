@@ -47,6 +47,10 @@
         release="release/IPM_Infra-1.4"
         test = "fty_commmon_selftest" >
 
+	<use project = "cxxtools" test="cxxtools::Utf8Codec::Utf8Codec" header="cxxtools/allocator.h"
+	    repository = "https://github.com/42ity/cxxtools.git"
+	    release="release/IPM_Infra-1.4"
+	    />
         <use project = "log4cplus" header = "log4cplus/logger.h"
             test = "appender_test"
             release="release/IPM_Infra-1.4"
