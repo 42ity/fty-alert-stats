@@ -67,8 +67,8 @@ EXTRA_DIST += \
 endif
 
 EXTRA_DIST += \
+    src/fty_alert_stats_actor.h \
     src/fty_actor.h \
-    src/fty_alert_stats_server.h \
     src/fty_proto_stateholders.h \
     README.md \
     src/fty_alert_stats_classes.h

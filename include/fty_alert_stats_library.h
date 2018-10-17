@@ -81,14 +81,14 @@
 //  These classes are stable or legacy and built in all releases
 //  Draft classes are by default not built in stable releases
 #ifdef FTY_ALERT_STATS_BUILD_DRAFT_API
-typedef struct _fty_alert_stats_actor_t fty_alert_stats_actor_t;
-#define FTY_ALERT_STATS_ACTOR_T_DEFINED
+typedef struct _fty_alert_stats_server_t fty_alert_stats_server_t;
+#define FTY_ALERT_STATS_SERVER_T_DEFINED
 #endif // FTY_ALERT_STATS_BUILD_DRAFT_API
 
 
 //  Public classes, each with its own header file
 #ifdef FTY_ALERT_STATS_BUILD_DRAFT_API
-#include "fty_alert_stats_actor.h"
+#include "fty_alert_stats_server.h"
 #endif // FTY_ALERT_STATS_BUILD_DRAFT_API
 
 #ifdef FTY_ALERT_STATS_BUILD_DRAFT_API

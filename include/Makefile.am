@@ -8,7 +8,7 @@ include_HEADERS = \
 
 if ENABLE_DRAFTS
 include_HEADERS += \
-    fty_alert_stats_actor.h
+    fty_alert_stats_server.h
 
 endif
 
