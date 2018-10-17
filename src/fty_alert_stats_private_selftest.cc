@@ -37,9 +37,6 @@
 void
 fty_alert_stats_private_selftest (bool verbose, const char *subtest)
 {
-// Tests for stable private classes:
-    if (streq (subtest, "$ALL") || streq (subtest, "fty_alert_stats_server_test"))
-        fty_alert_stats_server_test (verbose);
 }
 /*
 ################################################################################

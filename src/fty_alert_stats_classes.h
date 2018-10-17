@@ -35,17 +35,13 @@
 //  Extra headers
 
 //  Opaque class structures to allow forward references
-#ifndef FTY_ACTOR_T_DEFINED
-typedef struct _fty_actor_t fty_actor_t;
-#define FTY_ACTOR_T_DEFINED
-#endif
 #ifndef FTY_ALERT_STATS_ACTOR_T_DEFINED
 typedef struct _fty_alert_stats_actor_t fty_alert_stats_actor_t;
 #define FTY_ALERT_STATS_ACTOR_T_DEFINED
 #endif
-#ifndef FTY_ALERT_STATS_SERVER_T_DEFINED
-typedef struct _fty_alert_stats_server_t fty_alert_stats_server_t;
-#define FTY_ALERT_STATS_SERVER_T_DEFINED
+#ifndef FTY_ACTOR_T_DEFINED
+typedef struct _fty_actor_t fty_actor_t;
+#define FTY_ACTOR_T_DEFINED
 #endif
 #ifndef FTY_PROTO_STATEHOLDERS_T_DEFINED
 typedef struct _fty_proto_stateholders_t fty_proto_stateholders_t;
@@ -54,18 +50,12 @@ typedef struct _fty_proto_stateholders_t fty_proto_stateholders_t;
 
 //  Internal API
 
-#include "fty_actor.h"
 #include "fty_alert_stats_actor.h"
-#include "fty_alert_stats_server.h"
+#include "fty_actor.h"
 #include "fty_proto_stateholders.h"
 
 //  *** To avoid double-definitions, only define if building without draft ***
 #ifndef FTY_ALERT_STATS_BUILD_DRAFT_API
-
-//  *** Draft method, defined for internal use only ***
-//  Self test of this class.
-FTY_ALERT_STATS_PRIVATE void
-    fty_alert_stats_server_test (bool verbose);
 
 //  Self test for private classes
 FTY_ALERT_STATS_PRIVATE void
