@@ -300,6 +300,7 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
             std::to_string(metric.second.warning).c_str(),
             "");
 
+        fty::shm::write_metric(assetId,WARNING_METRIC,std::to_string(metric.second.warning),"", m_metricTTL);
         mlm_client_send(m_client, (std::string(WARNING_METRIC)+"@"+assetId).c_str(), &msg);
 
         msg = fty_proto_encode_metric(
@@ -311,6 +312,7 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
             std::to_string(metric.second.critical).c_str(),
             "");
 
+        fty::shm::write_metric(assetId, CRITICAL_METRIC, std::to_string(metric.second.critical), "", m_metricTTL);
         mlm_client_send(m_client, (std::string(CRITICAL_METRIC)+"@"+assetId).c_str(), &msg);
     }
     else {
