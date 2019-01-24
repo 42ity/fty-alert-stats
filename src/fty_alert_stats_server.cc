@@ -366,7 +366,7 @@ fty_alert_stats_server_test (bool verbose)
             //currently only verify the number in shm. Must be improved.
             {
               fty::shm::shmMetrics testresult;
-              fty::shm::read_metrics(FTY_SHM_METRIC_TYPE, ".*", ".*", testresult);
+              fty::shm::read_metrics(".*", ".*", testresult);
               assert(testCase.metrics.size() == testresult.size());
               fty_shm_delete_test_dir();
               fty_shm_set_test_dir(SELFTEST_DIR_RW);
@@ -377,7 +377,7 @@ fty_alert_stats_server_test (bool verbose)
             assert(zpoller_wait(metrics_poller, 1000) == nullptr);
             log_info(" * (No metrics received)");
             fty::shm::shmMetrics testresult;
-            fty::shm::read_metrics(FTY_SHM_METRIC_TYPE, ".*", ".*", testresult);
+            fty::shm::read_metrics(".*", ".*", testresult);
             assert(testresult.size() == 0);
         }
         else if (testCase.action == TestCase::Action::PURGE_METRICS) {
