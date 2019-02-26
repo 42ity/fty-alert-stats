@@ -299,6 +299,8 @@ fty_alert_stats_server_test (bool verbose)
     const char *SELFTEST_DIR_RW = "src/selftest-rw";
     assert (SELFTEST_DIR_RO);
     assert (SELFTEST_DIR_RW);
+    
+    fty_shm_set_test_dir(SELFTEST_DIR_RW);
 
     //  Set up broker
     zactor_t *server = zactor_new (mlm_server, (void*)"Malamute");
@@ -361,11 +363,22 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_destroy(&refMetric);
                 fty_proto_destroy(&recvMetric);
             }
+            //currently only verify the number in shm. Must be improved.
+            {
+              fty::shm::shmMetrics testresult;
+              fty::shm::read_metrics(".*", ".*", testresult);
+              assert(testCase.metrics.size() == testresult.size());
+              fty_shm_delete_test_dir();
+              fty_shm_set_test_dir(SELFTEST_DIR_RW);
+            }
         }
         else if (testCase.action == TestCase::Action::CHECK_NO_METRICS) {
             // Check we don't receive metrics
             assert(zpoller_wait(metrics_poller, 1000) == nullptr);
             log_info(" * (No metrics received)");
+            fty::shm::shmMetrics testresult;
+            fty::shm::read_metrics(".*", ".*", testresult);
+            assert(testresult.size() == 0);
         }
         else if (testCase.action == TestCase::Action::PURGE_METRICS) {
             // Purge away metrics
@@ -374,6 +387,8 @@ fty_alert_stats_server_test (bool verbose)
                 zmsg_t *msg = mlm_client_recv(metrics_consumer);
                 zmsg_destroy(&msg);
             }
+            fty_shm_delete_test_dir();
+            fty_shm_set_test_dir(SELFTEST_DIR_RW);
         }
     }
 
@@ -383,6 +398,7 @@ fty_alert_stats_server_test (bool verbose)
     mlm_client_destroy(&assets_producer);
     zactor_destroy(&alert_stats_server);
     zactor_destroy(&server);
+    fty_shm_delete_test_dir();
     //  @end
     printf ("OK\n");
 }
