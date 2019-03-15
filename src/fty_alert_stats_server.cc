@@ -324,12 +324,6 @@ fty_alert_stats_server_test (bool verbose)
     assert(mlm_client_connect(alerts_producer, endpoint, 1000, "alerts_producer") == 0);
     assert(mlm_client_set_producer(alerts_producer, FTY_PROTO_STREAM_ALERTS) == 0);
 
-    //  Consumer on FTY_PROTO_STREAM_METRICS stream
-    mlm_client_t *metrics_consumer = mlm_client_new();
-    assert(mlm_client_connect(metrics_consumer, endpoint, 1000, "metrics_consumer") == 0);
-    assert(mlm_client_set_consumer(metrics_consumer, FTY_PROTO_STREAM_METRICS, ".*") == 0);
-    zpoller_t *metrics_poller = zpoller_new(mlm_client_msgpipe(metrics_consumer), nullptr);
-
     //  Run test cases
     for (auto &testCase : testCases) {
         log_info("%s", testCase.name);
@@ -345,13 +339,12 @@ fty_alert_stats_server_test (bool verbose)
 
         if (testCase.action == TestCase::Action::CHECK_METRICS) {
             // Check metrics
+          sleep(1);
             for (auto refMsg : testCase.metrics) {
                 fty_proto_t *refMetric = fty_proto_decode(&refMsg);
-
-                assert(zpoller_wait(metrics_poller, 1000));
-                zmsg_t *recvMsg = mlm_client_recv(metrics_consumer);
-                fty_proto_t *recvMetric = fty_proto_decode(&recvMsg);
-                assert(recvMetric);
+                fty_proto_t *recvMetric;
+                log_info(" want metric type@name=%s@%s, value=%s", fty_proto_type(refMetric), fty_proto_name(refMetric), fty_proto_value(refMetric));
+                assert(fty::shm::read_metric(fty_proto_name(refMetric), fty_proto_type(refMetric), &recvMetric) == 0);
 
                 assert(fty_proto_id(recvMetric) == FTY_PROTO_METRIC);
                 log_info(" * Received metric type@name=%s@%s, value=%s", fty_proto_type(recvMetric), fty_proto_name(recvMetric), fty_proto_value(recvMetric));
@@ -363,37 +356,27 @@ fty_alert_stats_server_test (bool verbose)
                 fty_proto_destroy(&refMetric);
                 fty_proto_destroy(&recvMetric);
             }
-            //currently only verify the number in shm. Must be improved.
+            //clean shm
             {
-              fty::shm::shmMetrics testresult;
-              fty::shm::read_metrics(".*", ".*", testresult);
-              assert(testCase.metrics.size() == testresult.size());
               fty_shm_delete_test_dir();
               fty_shm_set_test_dir(SELFTEST_DIR_RW);
             }
         }
         else if (testCase.action == TestCase::Action::CHECK_NO_METRICS) {
             // Check we don't receive metrics
-            assert(zpoller_wait(metrics_poller, 1000) == nullptr);
-            log_info(" * (No metrics received)");
             fty::shm::shmMetrics testresult;
             fty::shm::read_metrics(".*", ".*", testresult);
             assert(testresult.size() == 0);
+            log_info(" * (No metrics received)");
         }
         else if (testCase.action == TestCase::Action::PURGE_METRICS) {
             // Purge away metrics
             log_info(" * (Not checking metrics)");
-            while (zpoller_wait(metrics_poller, 1000)) {
-                zmsg_t *msg = mlm_client_recv(metrics_consumer);
-                zmsg_destroy(&msg);
-            }
             fty_shm_delete_test_dir();
             fty_shm_set_test_dir(SELFTEST_DIR_RW);
         }
     }
 
-    zpoller_destroy(&metrics_poller);
-    mlm_client_destroy(&metrics_consumer);
     mlm_client_destroy(&alerts_producer);
     mlm_client_destroy(&assets_producer);
     zactor_destroy(&alert_stats_server);
