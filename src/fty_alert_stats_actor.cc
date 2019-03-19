@@ -289,31 +289,9 @@ void AlertStatsActor::sendMetric(AlertCounts::value_type &metric, bool recursive
     if (assetId.find("datacenter-") == 0 || assetId.find("room-") == 0 || assetId.find("row-") == 0 || assetId.find("rack-") == 0) {
         metric.second.lastSent = zclock_time()/1000;
 
-        zmsg_t *msg;
-
-        msg = fty_proto_encode_metric(
-            nullptr,
-            metric.second.lastSent,
-            m_metricTTL,
-            WARNING_METRIC,
-            assetId.c_str(),
-            std::to_string(metric.second.warning).c_str(),
-            "");
-
         fty::shm::write_metric(assetId,WARNING_METRIC,std::to_string(metric.second.warning),"", m_metricTTL);
-        mlm_client_send(m_client, (std::string(WARNING_METRIC)+"@"+assetId).c_str(), &msg);
-
-        msg = fty_proto_encode_metric(
-            nullptr,
-            metric.second.lastSent,
-            m_metricTTL,
-            CRITICAL_METRIC,
-            assetId.c_str(),
-            std::to_string(metric.second.critical).c_str(),
-            "");
 
         fty::shm::write_metric(assetId, CRITICAL_METRIC, std::to_string(metric.second.critical), "", m_metricTTL);
-        mlm_client_send(m_client, (std::string(CRITICAL_METRIC)+"@"+assetId).c_str(), &msg);
     }
     else {
         metric.second.lastSent = INT64_MAX/2;
