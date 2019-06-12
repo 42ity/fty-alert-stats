@@ -34,10 +34,10 @@
 void
 fty_alert_stats_server(zsock_t *pipe, void* args)
 {
-    const char *endpoint = (const char *) args;
+    const AlertStatsActorParams *params = (const AlertStatsActorParams *)args;
 
     try {
-        AlertStatsActor alertStatsServer(pipe, endpoint);
+        AlertStatsActor alertStatsServer(pipe, params->endpoint.c_str(), params->pollerTimeout, params->metricTTL);
         alertStatsServer.mainloop();
     }
     catch (std::runtime_error &e) {
@@ -311,7 +311,12 @@ fty_alert_stats_server_test (bool verbose)
         zstr_send (server, "VERBOSE");
     }
     printf(" * fty_alert_stats_server: ");
-    zactor_t *alert_stats_server = zactor_new(fty_alert_stats_server, (void *) endpoint);
+
+    AlertStatsActorParams params;
+    params.endpoint = endpoint;
+    params.metricTTL = 180;
+    params.pollerTimeout = 720 * 1000;
+    zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) &params);
     log_info("After launch fty_alert_stats_server");
 
     //  Producer on FTY_PROTO_STREAM_ASSETS stream
