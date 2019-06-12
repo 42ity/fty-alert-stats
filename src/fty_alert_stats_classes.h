@@ -32,8 +32,6 @@
 //  External API
 #include "../include/fty_alert_stats.h"
 
-//  Extra headers
-
 //  Opaque class structures to allow forward references
 #ifndef FTY_ACTOR_T_DEFINED
 typedef struct _fty_actor_t fty_actor_t;
@@ -51,6 +49,8 @@ typedef struct _fty_alert_stats_server_t fty_alert_stats_server_t;
 typedef struct _fty_proto_stateholders_t fty_proto_stateholders_t;
 #define FTY_PROTO_STATEHOLDERS_T_DEFINED
 #endif
+
+//  Extra headers
 
 //  Internal API
 
