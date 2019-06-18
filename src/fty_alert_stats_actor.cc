@@ -29,29 +29,29 @@
 #include "fty_alert_stats_classes.h"
 
 #include "fty_proto_stateholders.h"
-#include "fty_actor.h"
 
-AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout)
-    : FtyActor(pipe, endpoint, "fty-alert-stats", pollerTimeout),
+AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout, int64_t metricTTL)
+    : MlmAgent(pipe, endpoint, "fty-alert-stats", pollerTimeout),
       m_alertCounts(),
       m_assetQueries(),
       m_outstandingAssetQueries(),
       m_readyAssets(true),
       m_readyAlerts(true),
       m_lastResync(0),
-      m_metricTTL(12 * 60)
+      m_metricTTL(metricTTL),
+      m_pollerTimeout(pollerTimeout)
 {
-    if (mlm_client_set_consumer(m_client, FTY_PROTO_STREAM_ASSETS, ".*") == -1) {
+    if (mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ASSETS, ".*") == -1) {
         log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ASSETS, ".*");
         throw std::runtime_error("Can't set client consumer");
     }
 
-    if (mlm_client_set_consumer(m_client, FTY_PROTO_STREAM_ALERTS, ".*") == -1) {
+    if (mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ALERTS, ".*") == -1) {
         log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ALERTS, ".*");
         throw std::runtime_error("Can't set client consumer");
     }
 
-    if (mlm_client_set_producer(m_client, FTY_PROTO_STREAM_METRICS) == -1) {
+    if (mlm_client_set_producer(client(), FTY_PROTO_STREAM_METRICS) == -1) {
         log_error("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
         throw std::runtime_error("Can't set client producer");
     } 
@@ -328,7 +328,7 @@ void AlertStatsActor::drainOutstandingAssetQueries()
         zmsg_addstr(queryMsg, m_assetQueries.back().c_str());
         m_assetQueries.pop_back();
 
-        if (mlm_client_sendto(m_client, "asset-agent", "ASSET_DETAIL", nullptr, m_connectionTimeout, &queryMsg) == 0) {
+        if (mlm_client_sendto(client(), "asset-agent", "ASSET_DETAIL", nullptr, 5000, &queryMsg) == 0) {
             m_outstandingAssetQueries++;
         }
     }
@@ -357,14 +357,14 @@ void AlertStatsActor::startResynchronization()
     zmsg_t *msg = zmsg_new();
     zmsg_addstr(msg, "GET");
     zmsg_addstr(msg, "");
-    mlm_client_sendto(m_client, "asset-agent", "ASSETS_IN_CONTAINER", nullptr, m_connectionTimeout, &msg);
+    mlm_client_sendto(client(), "asset-agent", "ASSETS_IN_CONTAINER", nullptr, 5000, &msg);
 
     log_info("Querying details of all alerts...");
     m_alerts.clear();
     msg = zmsg_new();
     zmsg_addstr(msg, "LIST");
     zmsg_addstr(msg, "ALL");
-    mlm_client_sendto(m_client, "fty-alert-list", "rfc-alerts-list", nullptr, m_connectionTimeout, &msg);
+    mlm_client_sendto(client(), "fty-alert-list", "rfc-alerts-list", nullptr, 5000, &msg);
 
     // Disarm agent until we have our data
     m_readyAssets = false;
@@ -427,45 +427,18 @@ bool AlertStatsActor::handlePipe(zmsg_t *message)
         log_info("Agent is resynchronizing data...");
         startResynchronization();
     }
-    // Set metric TTL value
-    else if (streq(actor_command, "METRIC_TTL")) {
-        char *data = zmsg_popstr(message);
-        if (data) {
-            try {
-                m_metricTTL = std::stoul(data);
-                log_info("Set metric TTL to %" PRIi64 ".", m_metricTTL);
-            } catch (...) {
-                log_error("Invalid metric ttl '%s'.", data);
-            }
-        }
-        zstr_free(&data);
-    }
-    // Set tick period value
-    else if (streq(actor_command, "TICK_PERIOD")) {
-        char *data = zmsg_popstr(message);
-        if (data) {
-            try {
-                m_pollerTimeout = std::stoul(data) * 1000;
-                log_info("Set tick period to %" PRIi64 ".", m_pollerTimeout / 1000);
-            } catch (...) {
-                log_error("Invalid tick period '%s'.", data);
-            }
-        }
-        zstr_free(&data);
-    }
     else {
         log_error("Unexpected pipe message '%s'.", actor_command);
     }
 
     zstr_free(&actor_command);
-    zmsg_destroy(&message);
     return r;
 }
 
 bool AlertStatsActor::handleMailbox(zmsg_t *message)
 {
-    const char *sender = mlm_client_sender(m_client);
-    const char *subject = mlm_client_subject(m_client);
+    const char *sender = mlm_client_sender(client());
+    const char *subject = mlm_client_subject(client());
     char *actor_command = nullptr;
 
     // Resend all metrics
@@ -481,8 +454,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t *message)
             zmsg_addstr (reply, "RESYNC");
         }
 
-        mlm_client_sendto(m_client, sender, "REPUBLISH", NULL, 5000, &reply);
-        zmsg_destroy(&reply);
+        mlm_client_sendto(client(), sender, "REPUBLISH", NULL, 5000, &reply);
     }
     // Result of rfc-alerts-list query to fty-alert-list
     else if (streq(sender, "fty-alert-list") && streq(subject, "rfc-alerts-list")) {
@@ -568,7 +540,6 @@ bool AlertStatsActor::handleMailbox(zmsg_t *message)
     }
 
     zstr_free(&actor_command);
-    zmsg_destroy(&message);
     return true;
 }
 
@@ -577,11 +548,11 @@ bool AlertStatsActor::handleStream(zmsg_t *message)
     // On malamute streams we should receive only fty_proto messages
     if (!is_fty_proto(message)) {
         log_error("Received message is not a fty_proto message.");
-        zmsg_destroy(&message);
         return true;
     }
 
-    fty_proto_t *protocol_message = fty_proto_decode(&message);
+    zmsg_t *message_dup = zmsg_dup(message);
+    fty_proto_t *protocol_message = fty_proto_decode(&message_dup);
     if (protocol_message == NULL) {
         log_error("fty_proto_decode() failed, received message could not be parsed.");
         return true;

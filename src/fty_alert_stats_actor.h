@@ -22,7 +22,6 @@
 #ifndef FTY_ALERT_STATS_CLASS_H_H_INCLUDED
 #define FTY_ALERT_STATS_CLASS_H_H_INCLUDED
 
-#include "fty_actor.h"
 #include "fty_proto_stateholders.h"
 
 
@@ -41,10 +40,10 @@
  * the operation times out at the next tick). It will then republish all its
  * metrics with fresh data and resume normal operation.
  */
-class AlertStatsActor : public FtyActor, private FtyAlertStateHolder, private FtyAssetStateHolder
+class AlertStatsActor : public mlm::MlmAgent, private FtyAlertStateHolder, private FtyAssetStateHolder
 {
 public:
-    AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout = 180 * 1000);
+    AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout, int64_t metricTTL);
     virtual ~AlertStatsActor() = default;
 
 private:
@@ -105,6 +104,7 @@ private:
     int64_t m_lastResync;
 
     int64_t m_metricTTL;
+    int64_t m_pollerTimeout;
 
 public:
     constexpr static const char *WARNING_METRIC = "alerts.active.warning";

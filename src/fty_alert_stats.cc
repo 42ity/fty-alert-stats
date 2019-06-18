@@ -64,8 +64,8 @@ int main (int argc, char *argv [])
 {
     const char * CONFIGFILE = "";
     const char * LOGCONFIGFILE = "";
-    const char * metricTTL = "";
-    const char * tickPeriod = "";
+    const char * metricTTL = "720";
+    const char * tickPeriod = "180";
     const char * resyncPeriod = "43200";
     
     ftylog_setInstance("fty-alert-stats","");
@@ -121,21 +121,13 @@ int main (int argc, char *argv [])
         ftylog_setVeboseMode(ftylog_getInstance());
         log_trace ("Verbose mode OK");
     }
-    log_info ("fty-alert-stats starting");
-    const char *endpoint = "ipc://@/malamute";
-    alert_stats_server = zactor_new (fty_alert_stats_server, (void *) endpoint);
 
-    // Send configuration to agent
-    if (!streq(metricTTL,""))
-    {
-        zstr_sendm (alert_stats_server, "METRIC_TTL");
-        zstr_send (alert_stats_server, metricTTL);
-    }
-    if (!streq(tickPeriod,""))
-    {
-        zstr_sendm (alert_stats_server, "TICK_PERIOD");
-        zstr_send (alert_stats_server, tickPeriod);
-    }
+    log_info ("fty-alert-stats starting");
+    AlertStatsActorParams params;
+    params.endpoint = "ipc://@/malamute";
+    params.metricTTL = std::stol(metricTTL);
+    params.pollerTimeout = std::stol(tickPeriod) * 1000;
+    alert_stats_server = zactor_new (fty_alert_stats_server, (void *) &params);
 
     // Tell actor to fetch data right away
     zstr_send (alert_stats_server, "RESYNC");

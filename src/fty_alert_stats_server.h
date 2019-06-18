@@ -26,6 +26,13 @@
 extern "C" {
 #endif
 
+struct AlertStatsActorParams
+{
+    std::string endpoint;
+    int64_t pollerTimeout;
+    int64_t metricTTL;
+};
+
 //  @interface
 //  This is the actor constructor as zactor_fn
 FTY_ALERT_STATS_EXPORT void

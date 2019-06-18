@@ -13,7 +13,6 @@ lib_LTLIBRARIES += src/libfty_alert_stats.la
 pkgconfig_DATA = src/libfty_alert_stats.pc
 
 src_libfty_alert_stats_la_SOURCES = \
-    src/fty_actor.cc \
     src/fty_alert_stats_actor.cc \
     src/fty_alert_stats_server.cc \
     src/fty_proto_stateholders.cc \
@@ -212,6 +211,16 @@ else
 coverage: src/fty_alert_stats_selftest
 	@echo "call make clean && configure --with-gcov to enable code coverage"
 	@exit 1
+endif
+
+bindings: python-bindings
+
+python-bindings:
+if ENABLE_BINDINGS_PYTHON
+	-( cd bindings/python && python setup.py install )
+else
+	@echo "Python Bindings not enabled or missing setup.py... skipping"
+
 endif
 
 # A series of tests that the codebase and recipes are pretty, easy

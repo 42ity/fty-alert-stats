@@ -32,13 +32,7 @@
 //  External API
 #include "../include/fty_alert_stats.h"
 
-//  Extra headers
-
 //  Opaque class structures to allow forward references
-#ifndef FTY_ACTOR_T_DEFINED
-typedef struct _fty_actor_t fty_actor_t;
-#define FTY_ACTOR_T_DEFINED
-#endif
 #ifndef FTY_ALERT_STATS_ACTOR_T_DEFINED
 typedef struct _fty_alert_stats_actor_t fty_alert_stats_actor_t;
 #define FTY_ALERT_STATS_ACTOR_T_DEFINED
@@ -52,9 +46,10 @@ typedef struct _fty_proto_stateholders_t fty_proto_stateholders_t;
 #define FTY_PROTO_STATEHOLDERS_T_DEFINED
 #endif
 
+//  Extra headers
+
 //  Internal API
 
-#include "fty_actor.h"
 #include "fty_alert_stats_actor.h"
 #include "fty_alert_stats_server.h"
 #include "fty_proto_stateholders.h"
