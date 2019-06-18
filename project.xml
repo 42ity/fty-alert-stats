@@ -115,7 +115,7 @@
     </use>
     
     <use project = "fty_shm" libname = "libfty_shm" header="fty_shm.h" min_major = "1" test = "fty_shm_test" 
-	repository = "https://github.com/42ity/fty-shm.git"/>
+	release = "master" repository = "https://github.com/42ity/fty-shm.git"/>
 
     <use project = "fty-common-mlm" libname = "libfty_common_mlm" header = "fty_common_mlm.h"
         repository = "https://github.com/42ity/fty-common-mlm.git"
