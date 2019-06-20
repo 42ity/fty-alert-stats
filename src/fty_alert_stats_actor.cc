@@ -54,7 +54,7 @@ AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t po
     if (mlm_client_set_producer(client(), FTY_PROTO_STREAM_METRICS) == -1) {
         log_error("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
         throw std::runtime_error("Can't set client producer");
-    } 
+    }
 }
 
 bool AlertStatsActor::callbackAssetPre(fty_proto_t *asset)
@@ -102,7 +102,7 @@ void AlertStatsActor::callbackAssetPost(fty_proto_t *asset)
                 mustRecurse = true;
             }
         }
-        
+
         sendMetric(*(m_alertCounts.find(name)), mustRecurse);
     }
     else {
@@ -362,7 +362,9 @@ void AlertStatsActor::startResynchronization()
     log_info("Querying details of all alerts...");
     m_alerts.clear();
     msg = zmsg_new();
-    zmsg_addstr(msg, "LIST");
+    zuuid_t *correlation_id = zuuid_new ();
+    zmsg_addstr(msg, zuuid_str_canonical (correlation_id));
+    zmsg_addstr(msg, "LISTALL");
     zmsg_addstr(msg, "ALL");
     mlm_client_sendto(client(), "fty-alert-list", "rfc-alerts-list", nullptr, 5000, &msg);
 
@@ -459,9 +461,11 @@ bool AlertStatsActor::handleMailbox(zmsg_t *message)
     // Result of rfc-alerts-list query to fty-alert-list
     else if (streq(sender, "fty-alert-list") && streq(subject, "rfc-alerts-list")) {
         // Pop return code
+        char *correlation_id = zmsg_popstr (message);
+        zstr_free (&correlation_id);
         actor_command = zmsg_popstr(message);
 
-        if (actor_command && streq(actor_command, "LIST")) {
+        if (actor_command && streq(actor_command, "LISTALL")) {
             // Pop message frame 'state'
             zstr_free(&actor_command);
             actor_command = zmsg_popstr(message);
