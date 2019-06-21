@@ -52,7 +52,7 @@ if ENABLE_FTY_ALERT_STATS
 bin_PROGRAMS += src/fty-alert-stats
 src_fty_alert_stats_CPPFLAGS = ${AM_CPPFLAGS}
 src_fty_alert_stats_LDADD = ${program_libs}
-src_fty_alert_stats_SOURCES = src/fty_alert_stats.cc
+src_fty_alert_stats_SOURCES = src/fty-alert-stats.cc
 src_fty_alert_stats_config_DATA =
 src_fty_alert_stats_config_DATA += src/fty-alert-stats.cfg
 src_fty_alert_stats_configdir = $(sysconfdir)/fty-alert-stats

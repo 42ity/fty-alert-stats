@@ -30,7 +30,7 @@
 #include "platform.h"
 
 //  External API
-#include "../include/fty_alert_stats.h"
+#include "../include/fty-alert-stats.h"
 
 //  Opaque class structures to allow forward references
 #ifndef FTY_ALERT_STATS_ACTOR_T_DEFINED
