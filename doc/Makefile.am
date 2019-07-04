@@ -68,9 +68,9 @@ GENERATED_DOCS =
 ### so that the manpages for binary programs match their name, at expense
 ### of perhaps being built in a subdirectory under doc/.
 GENERATED_DOCS += fty-alert-stats.txt fty-alert-stats.doc
-fty-alert-stats.txt: $(top_srcdir)/src/fty_alert_stats.cc
+fty-alert-stats.txt: $(top_srcdir)/src/fty-alert-stats.cc
 	mkdir -p "$(builddir)/$(@D)"
-	"$(srcdir)/mkman" "fty_alert_stats" "$(builddir)/fty-alert-stats.txt" "$(srcdir)/.."
+	"$(srcdir)/mkman" "fty-alert-stats" "$(builddir)/fty-alert-stats.txt" "$(srcdir)/.."
 
 
 clean-local:
