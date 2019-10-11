@@ -54,7 +54,7 @@ AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t po
     if (mlm_client_set_producer(client(), FTY_PROTO_STREAM_METRICS) == -1) {
         log_error("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
         throw std::runtime_error("Can't set client producer");
-    } 
+    }
 }
 
 bool AlertStatsActor::callbackAssetPre(fty_proto_t *asset)
@@ -102,7 +102,7 @@ void AlertStatsActor::callbackAssetPost(fty_proto_t *asset)
                 mustRecurse = true;
             }
         }
-        
+
         sendMetric(*(m_alertCounts.find(name)), mustRecurse);
     }
     else {
