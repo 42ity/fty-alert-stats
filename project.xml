@@ -4,6 +4,7 @@
     script = "zproject.gsl"
     email = "EatonIPCOpenSource@eaton.com"
     url = "https://42ity.org"
+    check_license_years = "1"
     license = "GPL-2.0+"
     repository = "https://github.com/42ity/fty-alert-stats"
     >
@@ -13,12 +14,12 @@
     <target name = "travis" >
         <!-- option name = "clangformat_implem" value = "autotools" / -->
         <option name = "use_cmake" value = "0" />
+        <option name = "dist" value = "trusty" />
+        <option name = "shadow_gcc" value = "2" />
         <!-- option name = "clangformat_require_good" value = "1" / -->
         <option name = "clangformat_allow_failures" value = "1" />
         <option name = "use_pkg_deps_prereqs_source" value = "0" />
         <option name = "require_gitignore" value = "1" />
-        <option name = "dist" value = "trusty" />
-        <option name = "shadow_gcc" value = "2" />
     </target>
     <target name = "jenkins" >
         <option name = "agent_label" value = "devel-image &amp;&amp; x86_64" />
@@ -33,14 +34,14 @@
         <option name = "use_build_nonconcurrent" value = "1" />
         <option name = "use_checkout_explicit" value = "1" />
     </target>
-    
-    <classfilename use-cxx = "true" use-cxx-gcc-4-9 = "true"
-		source-extension = "cc" header-extension = "h"
-        pretty-print = "no" keep-tree = "true" />
 
     <include filename = "license.xml" />
     <version major = "1" minor = "0" patch = "0" />
     <abi current = "0" revision = "0" age = "0" />
+
+    <classfilename use-cxx = "true" use-cxx-gcc-4-9 = "true"
+        source-extension = "cc" header-extension = "h"
+        pretty-print = "no" keep-tree = "true" />
 
     <use project = "czmq"
         repository = "https://github.com/42ity/czmq.git"
@@ -119,9 +120,14 @@
                 />
         </use>
     </use>
-    
-    <use project = "fty_shm" libname = "libfty_shm" header="fty_shm.h" min_major = "1" test = "fty_shm_test" 
-	release = "master" repository = "https://github.com/42ity/fty-shm.git"/>
+
+    <use project = "fty_shm"
+        libname = "libfty_shm"
+        header="fty_shm.h" min_major = "1"
+        test = "fty_shm_test"
+        repository = "https://github.com/42ity/fty-shm.git"
+        release = "master"
+        />
 
     <use project = "fty-common-mlm" libname = "libfty_common_mlm" header = "fty_common_mlm.h"
         repository = "https://github.com/42ity/fty-common-mlm.git"
@@ -145,7 +151,9 @@
             </use>
         </use>
 
-        <use project = "cxxtools" test = "cxxtools::Utf8Codec::Utf8Codec" header = "cxxtools/allocator.h"
+        <use project = "cxxtools"
+            test = "cxxtools::Utf8Codec::Utf8Codec"
+            header = "cxxtools/allocator.h"
             repository = "https://github.com/42ity/cxxtools.git"
             release = "2.2-FTY-master"
             />
@@ -161,6 +169,13 @@
             repository = "https://github.com/42ity/fty-common.git"
             release = "master"
             test = "fty_common_selftest" >
+
+            <use project = "cxxtools"
+                test = "cxxtools::Utf8Codec::Utf8Codec"
+                header = "cxxtools/allocator.h"
+                repository = "https://github.com/42ity/cxxtools.git"
+                release = "2.2-FTY-master"
+                />
 
             <use project = "fty-common-logging" libname = "libfty_common_logging" header = "fty_log.h"
                 repository = "https://github.com/42ity/fty-common-logging.git"
@@ -189,6 +204,7 @@
     <class name = "fty_alert_stats_actor" private = "1" selftest = "0"></class>
     <class name = "fty_alert_stats_server" private = "1">Actor</class>
     <class name = "fty_proto_stateholders" private = "1" selftest = "0"></class>
+
     <main name = "fty-alert-stats" service = "1">Binary</main>
 
 </project>
