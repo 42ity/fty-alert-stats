@@ -62,7 +62,7 @@ BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  log4cplus-devel
 BuildRequires:  fty-common-logging-devel
 BuildRequires:  fty-proto-devel >= 1.0.0
-BuildRequires:  fty_shm-devel >= 1.0.0
+BuildRequires:  fty-shm-devel >= 1.0.0
 BuildRequires:  cxxtools-devel
 BuildRequires:  openssl-devel
 BuildRequires:  fty-common-devel

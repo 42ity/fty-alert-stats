@@ -803,7 +803,7 @@ AS_IF([test x"${search_libfty_shm}" = xyes], [
                 )
         fi
 
-        AC_CHECK_LIB([fty_shm], [fty_shm_test],
+        AC_CHECK_LIB([fty-shm], [fty_shm_test],
             [
                 was_fty_shm_check_lib_detected=yes
                 PKGCFG_LIBS_PRIVATE="$PKGCFG_LIBS_PRIVATE -lfty_shm"
