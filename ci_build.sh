@@ -412,16 +412,16 @@ default|default-Werror|default-with-docs|valgrind|clang-format-check)
         cd "${BASE_PWD}"
     fi
 
-    # Start of recipe for dependency: fty_shm
+    # Start of recipe for dependency: fty-shm
     if ! (command -v dpkg-query >/dev/null 2>&1 && dpkg-query --list libfty_shm-dev >/dev/null 2>&1) || \
-           (command -v brew >/dev/null 2>&1 && brew ls --versions fty_shm >/dev/null 2>&1) \
+           (command -v brew >/dev/null 2>&1 && brew ls --versions fty-shm >/dev/null 2>&1) \
     ; then
         echo ""
         BASE_PWD=${PWD}
-        echo "`date`: INFO: Building prerequisite 'fty_shm' from Git repository..." >&2
+        echo "`date`: INFO: Building prerequisite 'fty-shm' from Git repository..." >&2
         cd ./tmp-deps
-        $CI_TIME git clone --quiet --depth 1 -b master https://github.com/42ity/fty-shm.git fty_shm
-        cd ./fty_shm
+        $CI_TIME git clone --quiet --depth 1 -b master https://github.com/42ity/fty-shm.git fty-shm
+        cd ./fty-shm
         CCACHE_BASEDIR=${PWD}
         export CCACHE_BASEDIR
         git --no-pager log --oneline -n1
