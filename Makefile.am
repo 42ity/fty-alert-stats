@@ -16,18 +16,14 @@ AM_CPPFLAGS = \
     ${libzmq_CFLAGS} \
     ${czmq_CFLAGS} \
     ${malamute_CFLAGS} \
-    ${log4cplus_CFLAGS} \
     ${fty_common_logging_CFLAGS} \
     ${fty_proto_CFLAGS} \
     ${fty_shm_CFLAGS} \
-    ${cxxtools_CFLAGS} \
-    ${openssl_CFLAGS} \
-    ${fty_common_CFLAGS} \
     ${fty_common_mlm_CFLAGS} \
     -D__STDC_FORMAT_MACROS \
     -I$(srcdir)/include
 
-project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${log4cplus_LIBS} ${fty_common_logging_LIBS} ${fty_proto_LIBS} ${fty_shm_LIBS} ${cxxtools_LIBS} ${openssl_LIBS} ${fty_common_LIBS} ${fty_common_mlm_LIBS}
+project_libs = ${libsodium_LIBS} ${libzmq_LIBS} ${czmq_LIBS} ${malamute_LIBS} ${fty_common_logging_LIBS} ${fty_proto_LIBS} ${fty_shm_LIBS} ${fty_common_mlm_LIBS}
 
 SUBDIRS = doc
 SUBDIRS += include
@@ -52,13 +48,9 @@ EXTRA_DIST += \
     Findlibzmq.cmake \
     Findczmq.cmake \
     Findmalamute.cmake \
-    Findlog4cplus.cmake \
     Findfty_common_logging.cmake \
     Findfty_proto.cmake \
     Findfty_shm.cmake \
-    Findcxxtools.cmake \
-    Findopenssl.cmake \
-    Findfty_common.cmake \
     Findfty_common_mlm.cmake \
     builds/cmake/Modules/ClangFormat.cmake \
     builds/cmake/clang-format-check.sh.in \
