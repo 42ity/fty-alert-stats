@@ -66,6 +66,7 @@ pkg_deps_prereqs_source: &pkg_deps_prereqs_source
     - libczmq-dev
     - libmlm-dev
     - libfty-common-logging-dev
+    - cxxtools-dev
     - libfty-proto-dev
     - libfty-shm-dev
     - libfty-common-mlm-dev

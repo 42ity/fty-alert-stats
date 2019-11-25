@@ -65,6 +65,12 @@
         header = "fty_log.h"
         repository = "https://github.com/42ity/fty-common-logging.git"
         test = "fty_common_logging_selftest" />
+    
+    <!-- alert engine uses patched cxxtools, point to 42ity fork instead of upstream -->
+    <use project = "cxxtools"
+        test = "cxxtools::Utf8Codec::Utf8Codec"
+        header = "cxxtools/allocator.h"
+        repository = "https://github.com/42ity/cxxtools.git" />
 
     <use project = "fty-proto" libname = "libfty_proto" header = "ftyproto.h" prefix = "fty_proto"
         min_major = "1" min_minor = "0" min_patch = "0"

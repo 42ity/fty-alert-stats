@@ -60,6 +60,7 @@ BuildRequires:  zeromq-devel
 BuildRequires:  czmq-devel >= 3.0.2
 BuildRequires:  malamute-devel >= 1.0.0
 BuildRequires:  fty-common-logging-devel
+BuildRequires:  cxxtools-devel
 BuildRequires:  fty-proto-devel >= 1.0.0
 BuildRequires:  fty-shm-devel >= 1.0.0
 BuildRequires:  fty-common-mlm-devel
