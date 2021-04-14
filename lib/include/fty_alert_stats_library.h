@@ -25,17 +25,6 @@
 
 //  Set up environment for the application
 
-#if 0
-//  External dependencies
-#include <czmq.h>
-#include <malamute.h>
-#include <fty_log.h>
-#include <cxxtools/allocator.h>
-#include <ftyproto.h>
-#include <fty_shm.h>
-#include <fty_common_mlm.h>
-#endif
-
 //  FTY_ALERT_STATS version macros for compile-time API detection
 #define FTY_ALERT_STATS_VERSION_MAJOR 1
 #define FTY_ALERT_STATS_VERSION_MINOR 0
@@ -74,7 +63,9 @@
 #   endif
 #endif
 
-//  Public classes, each with its own header file
+
+#include <czmq.h>
+#include "../src/fty_alert_stats_server.h"
 
 #ifdef __cplusplus
 extern "C" {
