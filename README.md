@@ -4,13 +4,13 @@ Agent fty-alert-stats computes metric statistics on alerts.
 
 ## How to build
 
-To build fty-alert-stats project run:
+To build, run:
 
 ```bash
-./autogen.sh
-./configure
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=usr -DBUILD_TESTING=On ..
 make
-make check # to run self-test
+sudo make install
 ```
 
 ## How to run
@@ -20,7 +20,7 @@ To run fty-alert-stats project:
 * from within the source tree, run:
 
 ```bash
-./src/fty-alert-stats
+./build/agent/fty-alert-stats
 ```
 
 For the other options available, refer to the manual page of fty-alert-stats
