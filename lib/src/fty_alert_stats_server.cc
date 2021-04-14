@@ -106,7 +106,7 @@ zmsg_t* buildAssetMsg(const char *name, const char *operation, const Properties 
 void
 fty_alert_stats_server_test (bool verbose)
 {
-    ftylog_setInstance("fty-alert-stats","./src/selftest-ro/fty-alert-stats-log.conf");
+    ftylog_setInstance("fty-alert-stats", FTY_COMMON_LOGGING_DEFAULT_CFG);
 
     std::vector<TestCase> testCases =
     {
@@ -293,39 +293,45 @@ fty_alert_stats_server_test (bool verbose)
     };
 
     //  @selftest
+    printf(" * fty_alert_stats_server: \n");
+
     const char* endpoint = "inproc://fty-alert-stats-server-test";
 
-    const char *SELFTEST_DIR_RO = "src/selftest-ro";
-    const char *SELFTEST_DIR_RW = "src/selftest-rw";
+    const char *SELFTEST_DIR_RO = "selftest-ro";
+    const char *SELFTEST_DIR_RW = "selftest-rw";
     assert (SELFTEST_DIR_RO);
     assert (SELFTEST_DIR_RW);
-    
+
     fty_shm_set_test_dir(SELFTEST_DIR_RW);
 
     //  Set up broker
     zactor_t *server = zactor_new (mlm_server, (void*)"Malamute");
+    assert(server);
     zstr_sendx (server, "BIND", endpoint, NULL);
     if (verbose)
     {
         ftylog_setVeboseMode(ftylog_getInstance());
         zstr_send (server, "VERBOSE");
     }
-    printf(" * fty_alert_stats_server: ");
 
     AlertStatsActorParams params;
     params.endpoint = endpoint;
     params.metricTTL = 180;
     params.pollerTimeout = 720 * 1000;
     zactor_t *alert_stats_server = zactor_new (fty_alert_stats_server, (void *) &params);
+    assert(alert_stats_server);
+
     log_info("After launch fty_alert_stats_server");
 
     //  Producer on FTY_PROTO_STREAM_ASSETS stream
     mlm_client_t *assets_producer = mlm_client_new();
+    assert(assets_producer);
     assert(mlm_client_connect(assets_producer, endpoint, 1000, "assets_producer") == 0);
     assert(mlm_client_set_producer(assets_producer, FTY_PROTO_STREAM_ASSETS) == 0);
 
     //  Producer on FTY_PROTO_STREAM_ALERTS stream
     mlm_client_t *alerts_producer = mlm_client_new();
+    assert(alerts_producer);
     assert(mlm_client_connect(alerts_producer, endpoint, 1000, "alerts_producer") == 0);
     assert(mlm_client_set_producer(alerts_producer, FTY_PROTO_STREAM_ALERTS) == 0);
 
@@ -386,7 +392,9 @@ fty_alert_stats_server_test (bool verbose)
     mlm_client_destroy(&assets_producer);
     zactor_destroy(&alert_stats_server);
     zactor_destroy(&server);
+
     fty_shm_delete_test_dir();
+
     //  @end
-    printf ("OK\n");
+    printf(" * fty_alert_stats_server: OK\n");
 }

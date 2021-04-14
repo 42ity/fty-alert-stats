@@ -22,8 +22,6 @@
 #ifndef FTY_PROTO_STATEHOLDER_H_H_INCLUDED
 #define FTY_PROTO_STATEHOLDER_H_H_INCLUDED
 
-#include "fty_alert_stats_library.h"
-
 #include <string>
 #include <memory>
 #include <map>

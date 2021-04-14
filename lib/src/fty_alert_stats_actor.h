@@ -22,9 +22,6 @@
 #ifndef FTY_ALERT_STATS_CLASS_H_H_INCLUDED
 #define FTY_ALERT_STATS_CLASS_H_H_INCLUDED
 
-#include "fty_proto_stateholders.h"
-
-
 /**
  * \brief Agent for publishing aggregate metric statitics for alerts by asset.
  *

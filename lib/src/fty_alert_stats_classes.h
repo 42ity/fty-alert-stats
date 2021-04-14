@@ -26,46 +26,46 @@
 #ifndef FTY_ALERT_STATS_CLASSES_H_INCLUDED
 #define FTY_ALERT_STATS_CLASSES_H_INCLUDED
 
-//  Platform definitions, must come first
-#include "platform.h"
+//  External dependencies
+#include <czmq.h>
+#include <malamute.h>
+#include <cxxtools/allocator.h>
+#include <fty_log.h>
+#include <fty_proto.h>
+#include <fty_shm.h>
+#include <fty_common_mlm.h>
 
-//  External API
-#include "../include/fty-alert-stats.h"
-
-//  Opaque class structures to allow forward references
-#ifndef FTY_ALERT_STATS_ACTOR_T_DEFINED
-typedef struct _fty_alert_stats_actor_t fty_alert_stats_actor_t;
-#define FTY_ALERT_STATS_ACTOR_T_DEFINED
+#if defined (__WINDOWS__)
+#   if defined FTY_ALERT_STATS_STATIC
+#       define FTY_ALERT_STATS_EXPORT
+#   elif defined FTY_ALERT_STATS_INTERNAL_BUILD
+#       if defined DLL_EXPORT
+#           define FTY_ALERT_STATS_EXPORT __declspec(dllexport)
+#       else
+#           define FTY_ALERT_STATS_EXPORT
+#       endif
+#   elif defined FTY_ALERT_STATS_EXPORTS
+#       define FTY_ALERT_STATS_EXPORT __declspec(dllexport)
+#   else
+#       define FTY_ALERT_STATS_EXPORT __declspec(dllimport)
+#   endif
+#   define FTY_ALERT_STATS_PRIVATE
+#elif defined (__CYGWIN__)
+#   define FTY_ALERT_STATS_EXPORT
+#   define FTY_ALERT_STATS_PRIVATE
+#else
+#   if (defined __GNUC__ && __GNUC__ >= 4) || defined __INTEL_COMPILER
+#       define FTY_ALERT_STATS_PRIVATE __attribute__ ((visibility ("hidden")))
+#       define FTY_ALERT_STATS_EXPORT __attribute__ ((visibility ("default")))
+#   else
+#       define FTY_ALERT_STATS_PRIVATE
+#       define FTY_ALERT_STATS_EXPORT
+#   endif
 #endif
-#ifndef FTY_ALERT_STATS_SERVER_T_DEFINED
-typedef struct _fty_alert_stats_server_t fty_alert_stats_server_t;
-#define FTY_ALERT_STATS_SERVER_T_DEFINED
-#endif
-#ifndef FTY_PROTO_STATEHOLDERS_T_DEFINED
-typedef struct _fty_proto_stateholders_t fty_proto_stateholders_t;
-#define FTY_PROTO_STATEHOLDERS_T_DEFINED
-#endif
-
-//  Extra headers
 
 //  Internal API
-
+#include "fty_proto_stateholders.h"
 #include "fty_alert_stats_actor.h"
 #include "fty_alert_stats_server.h"
-#include "fty_proto_stateholders.h"
-
-//  *** To avoid double-definitions, only define if building without draft ***
-#ifndef FTY_ALERT_STATS_BUILD_DRAFT_API
-
-//  *** Draft method, defined for internal use only ***
-//  Self test of this class.
-FTY_ALERT_STATS_PRIVATE void
-    fty_alert_stats_server_test (bool verbose);
-
-//  Self test for private classes
-FTY_ALERT_STATS_PRIVATE void
-    fty_alert_stats_private_selftest (bool verbose, const char *subtest);
-
-#endif // FTY_ALERT_STATS_BUILD_DRAFT_API
 
 #endif

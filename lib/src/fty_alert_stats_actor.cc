@@ -28,8 +28,6 @@
 
 #include "fty_alert_stats_classes.h"
 
-#include "fty_proto_stateholders.h"
-
 AlertStatsActor::AlertStatsActor(zsock_t *pipe, const char *endpoint, int64_t pollerTimeout, int64_t metricTTL)
     : MlmAgent(pipe, endpoint, "fty-alert-stats", pollerTimeout),
       m_alertCounts(),
