@@ -17,49 +17,30 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-Source:         fty-alert-stats
-Section:        net
-Priority:       optional
-Maintainer:     fty-alert-stats Developers <eatonipcopensource@eaton.com>
+Source: fty-alert-stats
+Section:net
+Priority: optional
+Maintainer: fty-alert-stats Developers <eatonipcopensource@eaton.com>
 Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
+    cmake (>=3.0),
+    fty-cmake-dev,
     pkg-config,
-    libsodium-dev,
-    libzmq3-dev,
     libczmq-dev (>= 3.0.2),
     libmlm-dev (>= 1.0.0),
-    libfty-common-logging-dev,
     libcxxtools-dev,
-    libfty-proto-dev (>= 1.0.0),
     libfty-shm-dev (>= 1.0.0),
+    libfty-proto-dev (>= 1.0.0),
+    libfty-common-logging-dev,
     libfty-common-mlm-dev,
-    gcc (>= 4.9.0), g++ (>= 4.9.0),
     systemd,
     dh-systemd,
     asciidoc-base | asciidoc, xmlto,
     dh-autoreconf
 
-Package: libfty-alert-stats0
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: fty-alert-stats shared library
- This package contains shared library for fty-alert-stats:
- agent for computing aggregate statistics on alerts
-
 Package: fty-alert-stats
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends},
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: runnable binaries from fty-alert-stats
  Main package for fty-alert-stats:
  agent for computing aggregate statistics on alerts
-
-Package: fty-alert-stats-dbg
-Architecture: any
-Section: debug
-Priority: optional
-Depends:
-    fty-alert-stats (= ${binary:Version}),
-    ${misc:Depends}
-Description: fty-alert-stats debugging symbols
- This package contains the debugging symbols for fty-alert-stats:
- agent for computing aggregate statistics on alerts.
