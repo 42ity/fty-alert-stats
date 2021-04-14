@@ -1,5 +1,5 @@
 [Unit]
-Description=fty-alert-stats service
+Description=@PROJECT_NAME@ service
 Requires=network.target malamute.service
 After=network.target malamute.service
 PartOf=bios.target
@@ -10,19 +10,26 @@ BindsTo=fty-asset.service
 
 [Service]
 Type=simple
-User=bios
+User=@AGENT_USER@
 Restart=always
-EnvironmentFile=-@prefix@/share/bios/etc/default/bios
-EnvironmentFile=-@prefix@/share/bios/etc/default/bios__%n.conf
-EnvironmentFile=-@prefix@/share/fty/etc/default/fty
-EnvironmentFile=-@prefix@/share/fty/etc/default/fty__%n.conf
-EnvironmentFile=-@sysconfdir@/default/bios
-EnvironmentFile=-@sysconfdir@/default/bios__%n.conf
-EnvironmentFile=-@sysconfdir@/default/fty
-EnvironmentFile=-@sysconfdir@/default/fty__%n.conf
-Environment="prefix=@prefix@"
 Environment='SYSTEMD_UNIT_FULLNAME=%n'
-ExecStart=@prefix@/bin/fty-alert-stats -c @sysconfdir@/@PACKAGE@/fty-alert-stats.cfg
+Environment="prefix=/usr"
+EnvironmentFile=-/usr/share/bios/etc/default/bios
+EnvironmentFile=-/usr/share/bios/etc/default/bios__%n.conf
+EnvironmentFile=-/usr/share/fty/etc/default/fty
+EnvironmentFile=-/usr/share/fty/etc/default/fty__%n.conf
+EnvironmentFile=-/etc/default/bios
+EnvironmentFile=-/etc/default/bios__%n.conf
+EnvironmentFile=-/etc/default/fty
+EnvironmentFile=-/etc/default/fty__%n.conf
+# etc
+ExecStartPre=+/bin/chown -R @AGENT_USER@ @AGENT_ETC_DIR@
+ExecStartPre=+/bin/chmod 771 @AGENT_ETC_DIR@
+# var/lib/fty
+ExecStartPre=+/bin/chown -R @AGENT_USER@ @AGENT_VAR_DIR@
+ExecStartPre=+/bin/chmod 771 @AGENT_VAR_DIR@
+# exec (no argument)
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/@PROJECT_NAME@ -c @AGENT_ETC_DIR@/@PROJECT_NAME@.cfg
 
 [Install]
 WantedBy=bios.target
