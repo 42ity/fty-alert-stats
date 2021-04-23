@@ -22,13 +22,16 @@ EnvironmentFile=-/etc/default/bios
 EnvironmentFile=-/etc/default/bios__%n.conf
 EnvironmentFile=-/etc/default/fty
 EnvironmentFile=-/etc/default/fty__%n.conf
+
 # etc
-ExecStartPre=+/bin/chown -R @AGENT_USER@ @AGENT_ETC_DIR@
-ExecStartPre=+/bin/chmod 771 @AGENT_ETC_DIR@
+ExecStartPre=+/bin/chmod 755 @AGENT_ETC_DIR@
+ExecStartPre=+/bin/chown -R www-data @AGENT_ETC_DIR@/*
+ExecStartPre=+/bin/chmod 644 @AGENT_ETC_DIR@/*
 # var/lib/fty
-ExecStartPre=+/bin/chown -R @AGENT_USER@ @AGENT_VAR_DIR@
-ExecStartPre=+/bin/chmod 771 @AGENT_VAR_DIR@
-# exec (no argument)
+#ExecStartPre=+/bin/chown -R @AGENT_USER@ @AGENT_VAR_DIR@
+#ExecStartPre=+/bin/chmod 771 @AGENT_VAR_DIR@
+
+# exec
 ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/@PROJECT_NAME@ -c @AGENT_ETC_DIR@/@PROJECT_NAME@.cfg
 
 [Install]
