@@ -19,15 +19,11 @@ add_subdirectory(agent)
 
 set(AGENT_USER "bios")
 set(AGENT_ETC_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/${PROJECT_NAME}")
-set(AGENT_VAR_DIR "${CMAKE_INSTALL_FULL_LOCALSTATEDIR}/lib/fty/${PROJECT_NAME}")
-
-# var/lib/fty runtime directory
-install(DIRECTORY DESTINATION ${AGENT_VAR_DIR})
 
 # cfg file -> etc/
-configure_file("${PROJECT_SOURCE_DIR}/resources/fty-alert-stats.cfg.in" "${PROJECT_BINARY_DIR}/resources/fty-alert-stats.cfg" @ONLY)
-install(FILES "${PROJECT_BINARY_DIR}/resources/fty-alert-stats.cfg" DESTINATION ${AGENT_ETC_DIR})
+configure_file("${PROJECT_SOURCE_DIR}/resources/${PROJECT_NAME}.cfg.in" "${PROJECT_BINARY_DIR}/resources/${PROJECT_NAME}.cfg" @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}/resources/${PROJECT_NAME}.cfg" DESTINATION ${AGENT_ETC_DIR})
 
 # service -> lib/systemd/system
-configure_file("${PROJECT_SOURCE_DIR}/resources/fty-alert-stats.service.in" "${PROJECT_BINARY_DIR}/resources/fty-alert-stats.service" @ONLY)
-install(FILES "${PROJECT_BINARY_DIR}/resources/fty-alert-stats.service" DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system/)
+configure_file("${PROJECT_SOURCE_DIR}/resources/${PROJECT_NAME}.service.in" "${PROJECT_BINARY_DIR}/resources/${PROJECT_NAME}.service" @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}/resources/${PROJECT_NAME}.service" DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system/)
