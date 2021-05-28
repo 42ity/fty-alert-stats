@@ -3,13 +3,13 @@ cmake_policy(VERSION 3.13)
 
 ########################################################################################################################
 
-#Create the target
 etn_target(exe ${PROJECT_NAME}
     SOURCES
         src/fty-alert-stats.cc
-    USES
-        czmq
-        fty_common_logging
+    INCLUDE_DIRS
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/src
     USES_PRIVATE
         ${PROJECT_NAME}-lib
 )
+
+########################################################################################################################

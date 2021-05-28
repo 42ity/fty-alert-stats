@@ -25,18 +25,12 @@ Standards-Version: 4.0.1.0
 Build-Depends: debhelper (>= 9),
     cmake (>=3.0),
     fty-cmake-dev,
-    pkg-config,
     libczmq-dev (>= 3.0.2),
     libmlm-dev (>= 1.0.0),
-    libcxxtools-dev,
     libfty-shm-dev,
     libfty-proto-dev,
     libfty-common-logging-dev,
-    libfty-common-mlm-dev,
-    systemd,
-    dh-systemd,
-    asciidoc-base | asciidoc, xmlto,
-    dh-autoreconf
+    libfty-common-mlm-dev
 
 Package: fty-alert-stats
 Architecture: any

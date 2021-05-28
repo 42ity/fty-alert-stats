@@ -19,33 +19,16 @@
     =========================================================================
 */
 
-#ifndef FTY_ALERT_STATS_SERVER_H_INCLUDED
-#define FTY_ALERT_STATS_SERVER_H_INCLUDED
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
+#include <czmq.h>
+#include <string>
 
 struct AlertStatsActorParams
 {
     std::string endpoint;
-    int64_t pollerTimeout;
-    int64_t metricTTL;
+    int64_t     pollerTimeout;
+    int64_t     metricTTL;
 };
 
-//  @interface
 //  This is the actor constructor as zactor_fn
-FTY_ALERT_STATS_EXPORT void
-    fty_alert_stats_server (zsock_t *pipe, void* args);
-
-//  Self test of this class
-FTY_ALERT_STATS_EXPORT void
-    fty_alert_stats_server_test (bool verbose);
-
-//  @end
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+void fty_alert_stats_server(zsock_t* pipe, void* args);
