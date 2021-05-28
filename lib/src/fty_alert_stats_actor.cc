@@ -22,6 +22,7 @@
 #include "fty_alert_stats_actor.h"
 #include <fty_log.h>
 #include <fty_shm.h>
+#include <stdexcept>
 
 AlertStatsActor::AlertStatsActor(zsock_t* pipe, const char* endpoint, int64_t pollerTimeout, int64_t metricTTL)
     : MlmAgent(pipe, endpoint, "fty-alert-stats", int(pollerTimeout))
