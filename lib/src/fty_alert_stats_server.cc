@@ -22,6 +22,7 @@
 #include "fty_alert_stats_server.h"
 #include "fty_alert_stats_actor.h"
 #include <fty_log.h>
+#include <stdexcept>
 
 //  --------------------------------------------------------------------------
 //  Actor function
