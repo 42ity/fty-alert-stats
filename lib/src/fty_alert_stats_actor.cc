@@ -514,7 +514,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
 bool AlertStatsActor::handleStream(zmsg_t* message)
 {
     // On malamute streams we should receive only fty_proto messages
-    if (!is_fty_proto(message)) {
+    if (!fty_proto_is(message)) {
         log_error("Received message is not a fty_proto message.");
         return true;
     }
