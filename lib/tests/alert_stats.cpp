@@ -1,0 +1,273 @@
+#include "src/fty_alert_stats_actor.h"
+#include "src/fty_alert_stats_server.h"
+#include <catch2/catch.hpp>
+#include <czmq.h>
+#include <fty_proto.h>
+#include <fty_shm.h>
+#include <map>
+
+namespace {
+
+struct TestCase
+{
+    enum Action
+    {
+        PURGE_METRICS,
+        CHECK_METRICS,
+        CHECK_NO_METRICS
+    };
+
+    typedef std::vector<zmsg_t*> ProtoVector;
+
+    TestCase(const char* n, const ProtoVector& as, const ProtoVector& al, const ProtoVector& me, Action ac)
+        : name(n)
+        , assets(as)
+        , alerts(al)
+        , metrics(me)
+        , action(ac)
+    {
+    }
+
+    const char* name;
+    ProtoVector assets;
+    ProtoVector alerts;
+    ProtoVector metrics;
+    Action      action;
+};
+
+typedef std::map<std::string, std::string> Properties;
+
+zmsg_t* buildAssetMsg(const char* name, const char* operation, const Properties& aux = {}, const Properties& ext = {})
+{
+    zhash_t* auxHash = zhash_new();
+    zhash_t* extHash = zhash_new();
+    assert(auxHash);
+    assert(extHash);
+
+    for (const auto& i : aux) {
+        assert(zhash_insert(auxHash, i.first.c_str(), const_cast<char*>(i.second.c_str())) == 0);
+    }
+    for (const auto& i : ext) {
+        assert(zhash_insert(extHash, i.first.c_str(), const_cast<char*>(i.second.c_str())) == 0);
+    }
+
+    zmsg_t* msg = fty_proto_encode_asset(auxHash, name, operation, extHash);
+    assert(msg);
+
+    zhash_destroy(&auxHash);
+    zhash_destroy(&extHash);
+
+    return msg;
+}
+
+} // namespace
+
+
+TEST_CASE("alert stats server test")
+{
+    std::vector<TestCase> testCases = {
+        {
+            "Set up assets",
+            {buildAssetMsg("datacenter-3", FTY_PROTO_ASSET_OP_CREATE, {{"status", "active"}}),
+                buildAssetMsg("rackcontroller-0", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+                buildAssetMsg("room-4", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+                buildAssetMsg("row-5", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "room-4"}}),
+                buildAssetMsg("rack-6", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "row-5"}})},
+            {}, {},
+            TestCase::Action::PURGE_METRICS // Not checking metrics now since we'll have a storm
+        },
+        {"Publish WARNING alert1@rackcontroller-0", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert1@rackcontroller-0",
+                "rackcontroller-0", "ACTIVE", "WARNING", "", nullptr)},
+            {// fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
+             // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Publish WARNING alert2@row-5", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert2@row-5", "row-5", "ACTIVE",
+                "WARNING", "", nullptr)},
+            {fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "row-5", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "row-5", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "room-4", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "room-4", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Publish CRITICAL alert3@room4", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert3@room-4", "room-4", "ACTIVE",
+                "CRITICAL", "", nullptr)},
+            {fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "room-4", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "room-4", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "1", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Clear WARNING alert1@rackcontroller-0", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert1@rackcontroller-0",
+                "rackcontroller-0", "RESOLVED", "OK", "", nullptr)},
+            {// fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "0", ""),
+             // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "1", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Publish ACK-SILENCE alert1@rackcontroller-0", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert1@rackcontroller-0",
+                "rackcontroller-0", "ACK-SILENCE", "WARNING", "", nullptr)},
+            {}, TestCase::Action::CHECK_NO_METRICS},
+        {
+            "Move room-4 to datacenter-6",
+            {
+                buildAssetMsg("room-4", FTY_PROTO_ASSET_OP_UPDATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-6"}}),
+            },
+            {}, {},
+            TestCase::Action::PURGE_METRICS // Not checking metrics now since we'll have a storm
+        },
+        {"Publish WARNING alert4@row-5", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert4@row-5", "row-5", "ACTIVE",
+                "WARNING", "", nullptr)},
+            {fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "row-5", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "row-5", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "room-4", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "room-4", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-6", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-6", "1", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Demote alert3@room4 from CRITICAL to WARNING", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert3@room-4", "room-4", "ACTIVE",
+                "WARNING", "", nullptr)},
+            {fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "room-4", "3", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "room-4", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-6", "3", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-6", "0", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Update rackcontroller-0 without touching topology",
+            {
+                buildAssetMsg("rackcontroller-0", FTY_PROTO_ASSET_OP_UPDATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}, {"_bwaa", "bwaa"}}),
+            },
+            {}, {}, TestCase::Action::CHECK_NO_METRICS},
+        {"Publish WARNING alert1@rackcontroller-0", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert1@rackcontroller-0",
+                "rackcontroller-0", "ACTIVE", "WARNING", "", nullptr)},
+            {// fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-0", "1", ""),
+             // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-0", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "1", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")},
+            TestCase::Action::CHECK_METRICS},
+        {"Create rackcontroller-1 (with no known alerts)",
+            {
+                buildAssetMsg("rackcontroller-1", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+            },
+            {},
+            {
+                // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-1", "0", ""),
+                // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-1", "0", "")
+            },
+            TestCase::Action::CHECK_NO_METRICS},
+        {"Publish WARNING alert1@rackcontroller-2 (unknown asset)", {},
+            {fty_proto_encode_alert(nullptr, uint64_t(zclock_time() / 1000), 60, "alert1@rackcontroller-2",
+                "rackcontroller-2", "ACTIVE", "WARNING", "", nullptr)},
+            {
+                // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+                // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0",
+                // ""),
+            },
+            TestCase::Action::CHECK_NO_METRICS},
+        {"Create rackcontroller-2 (with known alerts)",
+            {
+                buildAssetMsg("rackcontroller-2", FTY_PROTO_ASSET_OP_CREATE,
+                    {{"status", "active"}, {FTY_PROTO_ASSET_AUX_PARENT_NAME_1, "datacenter-3"}}),
+            },
+            {},
+            {// fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "rackcontroller-2", "1", ""),
+             // fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "rackcontroller-2", "0", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::WARNING_METRIC, "datacenter-3", "2", ""),
+                fty_proto_encode_metric(nullptr, 0, 0, AlertStatsActor::CRITICAL_METRIC, "datacenter-3", "0", "")},
+            TestCase::Action::CHECK_METRICS},
+    };
+
+    const char* endpoint = "inproc://fty-alert-stats-server-test";
+
+    fty_shm_set_test_dir(".");
+
+    //  Set up broker
+    zactor_t* server = zactor_new(mlm_server, const_cast<char*>("Malamute"));
+    REQUIRE(server);
+    zstr_sendx(server, "BIND", endpoint, NULL);
+    AlertStatsActorParams params;
+    params.endpoint              = endpoint;
+    params.metricTTL             = 180;
+    params.pollerTimeout         = 720 * 1000;
+    zactor_t* alert_stats_server = zactor_new(fty_alert_stats_server, reinterpret_cast<void*>(&params));
+    REQUIRE(alert_stats_server);
+
+    //  Producer on FTY_PROTO_STREAM_ASSETS stream
+    mlm_client_t* assets_producer = mlm_client_new();
+    REQUIRE(assets_producer);
+    REQUIRE(mlm_client_connect(assets_producer, endpoint, 1000, "assets_producer") == 0);
+    REQUIRE(mlm_client_set_producer(assets_producer, FTY_PROTO_STREAM_ASSETS) == 0);
+
+    //  Producer on FTY_PROTO_STREAM_ALERTS stream
+    mlm_client_t* alerts_producer = mlm_client_new();
+    REQUIRE(alerts_producer);
+    REQUIRE(mlm_client_connect(alerts_producer, endpoint, 1000, "alerts_producer") == 0);
+    REQUIRE(mlm_client_set_producer(alerts_producer, FTY_PROTO_STREAM_ALERTS) == 0);
+
+    //  Run test cases
+    for (auto& testCase : testCases) {
+        // Inject assets
+        for (auto asset : testCase.assets) {
+            REQUIRE(mlm_client_send(assets_producer, "asset", &asset) == 0);
+        }
+        // Inject alerts
+        for (auto alert : testCase.alerts) {
+            REQUIRE(mlm_client_send(alerts_producer, "alert", &alert) == 0);
+        }
+
+        if (testCase.action == TestCase::Action::CHECK_METRICS) {
+            // Check metrics
+            sleep(1);
+            for (auto refMsg : testCase.metrics) {
+                fty_proto_t* refMetric = fty_proto_decode(&refMsg);
+                fty_proto_t* recvMetric;
+                REQUIRE(fty::shm::read_metric(fty_proto_name(refMetric), fty_proto_type(refMetric), &recvMetric) == 0);
+
+                CHECK(fty_proto_id(recvMetric) == FTY_PROTO_METRIC);
+
+                CHECK(streq(fty_proto_type(refMetric), fty_proto_type(recvMetric)));
+                CHECK(streq(fty_proto_name(refMetric), fty_proto_name(recvMetric)));
+                CHECK(streq(fty_proto_value(refMetric), fty_proto_value(recvMetric)));
+
+                fty_proto_destroy(&refMetric);
+                fty_proto_destroy(&recvMetric);
+            }
+            // clean shm
+            {
+                fty_shm_delete_test_dir();
+                fty_shm_set_test_dir(".");
+            }
+        } else if (testCase.action == TestCase::Action::CHECK_NO_METRICS) {
+            // Check we don't receive metrics
+            fty::shm::shmMetrics testresult;
+            fty::shm::read_metrics(".*", ".*", testresult);
+            CHECK(testresult.size() == 0);
+        } else if (testCase.action == TestCase::Action::PURGE_METRICS) {
+            // Purge away metrics
+            fty_shm_delete_test_dir();
+            fty_shm_set_test_dir(".");
+        }
+    }
+
+    mlm_client_destroy(&alerts_producer);
+    mlm_client_destroy(&assets_producer);
+    zactor_destroy(&alert_stats_server);
+    zactor_destroy(&server);
+
+    fty_shm_delete_test_dir();
+}

@@ -19,85 +19,81 @@
     =========================================================================
 */
 
-#ifndef FTY_PROTO_STATEHOLDER_H_H_INCLUDED
-#define FTY_PROTO_STATEHOLDER_H_H_INCLUDED
-
-#include <string>
-#include <memory>
+#pragma once
+#include <fty_proto.h>
+#include <functional>
 #include <map>
+#include <memory>
+#include <string>
 
 typedef std::unique_ptr<fty_proto_t, std::function<void(fty_proto_t*)>> FtyProto;
-typedef std::map<std::string, FtyProto> FtyProtoCollection;
+typedef std::map<std::string, FtyProto>                                 FtyProtoCollection;
 
-/**
- * \brief Helper class for tracking fty_proto_t assets.
- */
+/// Helper class for tracking fty_proto_t assets.
 class FtyAssetStateHolder
 {
 public:
     virtual ~FtyAssetStateHolder() = default;
 
 protected:
-    /**
-     * \brief Process the asset and call the callbacks methods.
-     *
-     * This method takes ownership of the fty_proto_t object.
-     */
-    void processAsset(fty_proto_t *asset);
+    /// Process the asset and call the callbacks methods.
+    ///
+    /// This method takes ownership of the fty_proto_t object.
+    void processAsset(fty_proto_t* asset);
 
-    /**
-     * \brief Callback called before registering (or deleting) an asset. The method must NOT take ownership of the object.
-     * \param asset fty_proto_t asset object
-     * \return true if the asset shall be registered/deleted, false if it shall be ignored.
-     */
-    virtual bool callbackAssetPre(fty_proto_t *asset) { return true; }
+    /// Callback called before registering (or deleting) an asset. The method must
+    /// NOT take ownership of the object.
+    /// @param asset fty_proto_t asset object
+    /// @return true if the asset shall be registered/deleted, false if it shall
+    /// be ignored.
+    virtual bool callbackAssetPre(fty_proto_t* /*asset*/)
+    {
+        return true;
+    }
 
-    /**
-     * \brief Callback called after registering (or deleting) an asset. The method must NOT take ownership of the object.
-     * \param asset fty_proto_t asset object
-     */
-    virtual void callbackAssetPost(fty_proto_t *asset) { }
+    /// Callback called after registering (or deleting) an asset. The method must
+    /// NOT take ownership of the object.
+    /// @param asset fty_proto_t asset object
+    virtual void callbackAssetPost(fty_proto_t* /*asset*/)
+    {
+    }
 
-    /** \brief Collection of known assets. **/
+    /// Collection of known assets.
     FtyProtoCollection m_assets;
 };
 
-/**
- * \brief Helper class for tracking fty_proto_t alerts.
- */
+/// Helper class for tracking fty_proto_t alerts.
 class FtyAlertStateHolder
 {
 public:
     virtual ~FtyAlertStateHolder() = default;
 
 protected:
-    /**
-     * \brief Process the alert and call the callbacks methods.
-     *
-     * This method takes ownership of the fty_proto_t object.
-     */
-    void processAlert(fty_proto_t *alert);
+    /// Process the alert and call the callbacks methods.
+    ///
+    /// This method takes ownership of the fty_proto_t object.
+    void processAlert(fty_proto_t* alert);
 
-    /**
-     * \brief Call resolve callbacks on expired alerts (i.e. delete them).
-     */
+    /// Call resolve callbacks on expired alerts (i.e. delete them).
     void purgeExpiredAlerts();
 
-    /**
-     * \brief Callback called before registering (or deleting) an alert. The method must NOT take ownership of the object.
-     * \param asset fty_proto_t alert object
-     * \return true if the alert shall be registered/deleted, false if it shall be ignored.
-     */
-    virtual bool callbackAlertPre(fty_proto_t *alert) { return true; }
+    /// Callback called before registering (or deleting) an alert. The method must
+    /// NOT take ownership of the object.
+    /// @param asset fty_proto_t alert object
+    /// @return true if the alert shall be registered/deleted, false if it shall
+    /// be ignored.
+    virtual bool callbackAlertPre(fty_proto_t* /*alert*/)
+    {
+        return true;
+    }
 
-    /**
-     * \brief Callback called after registering (or deleting) an alert. The method must NOT take ownership of the object.
-     * \param asset fty_proto_t alert object
-     */
-    virtual void callbackAlertPost(fty_proto_t *alert) { }
+    /// Callback called after registering (or deleting) an alert. The method must
+    /// NOT take ownership of the object.
+    /// @param asset fty_proto_t alert object
+    virtual void callbackAlertPost(fty_proto_t* /*alert*/)
+    {
+    }
 
-    /** \brief Collection of known alerts. **/
+    /// Collection of known alerts.
     FtyProtoCollection m_alerts;
 };
-
-#endif

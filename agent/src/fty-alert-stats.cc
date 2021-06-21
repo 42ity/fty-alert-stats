@@ -27,17 +27,17 @@
 */
 
 #include <fty_log.h>
-#include "fty_alert_stats_library.h"
+#include "fty_alert_stats_server.h"
 
 static zactor_t *alert_stats_server;
 
-static int s_resync_timer (zloop_t *loop, int timer_id, void *output)
+static int s_resync_timer (zloop_t */*loop*/, int /*timer_id*/, void *output)
 {
     zstr_send (output, "RESYNC");
     return 0;
 }
 
-static int s_resync_actor_pipe (zloop_t *loop, zsock_t *reader, void *arg)
+static int s_resync_actor_pipe (zloop_t */*loop*/, zsock_t */*reader*/, void */*arg*/)
 {
     return -1;
 }
@@ -47,10 +47,10 @@ static void s_resync_actor (zsock_t *pipe, void* resyncPeriod)
     // Parse resyncPeriod, falling back to default period on failure.
     size_t loop_delay = 43200; // sec.
     try {
-        loop_delay = std::stoul((const char*)resyncPeriod);
+        loop_delay = std::stoul(reinterpret_cast<const char*>(resyncPeriod));
     }
     catch (...) {
-        log_error("Invalid resync period '%s'.", (const char*)resyncPeriod);
+        log_error("Invalid resync period '%s'.", reinterpret_cast<const char*>(resyncPeriod));
     }
 
     loop_delay *= 1000; // msec.
@@ -135,7 +135,7 @@ int main (int argc, char *argv [])
     params.endpoint = "ipc://@/malamute";
     params.metricTTL = std::stol(metricTTL);
     params.pollerTimeout = std::stol(tickPeriod) * 1000;
-    alert_stats_server = zactor_new (fty_alert_stats_server, (void *) &params);
+    alert_stats_server = zactor_new (fty_alert_stats_server, reinterpret_cast<void*>(&params));
     if (!alert_stats_server) {
         log_fatal("alert_stats_server creation failed");
         return EXIT_FAILURE;
