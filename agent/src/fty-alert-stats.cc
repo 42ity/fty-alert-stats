@@ -133,6 +133,7 @@ int main (int argc, char *argv [])
 
     AlertStatsActorParams params;
     params.endpoint = "ipc://@/malamute";
+    params.address = "fty-alert-stats";
     params.metricTTL = std::stol(metricTTL);
     params.pollerTimeout = std::stol(tickPeriod) * 1000;
     alert_stats_server = zactor_new (fty_alert_stats_server, reinterpret_cast<void*>(&params));

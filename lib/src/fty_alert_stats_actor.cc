@@ -24,8 +24,8 @@
 #include <fty_shm.h>
 #include <stdexcept>
 
-AlertStatsActor::AlertStatsActor(zsock_t* pipe, const char* endpoint, int64_t pollerTimeout, int64_t metricTTL)
-    : MlmAgent(pipe, endpoint, "fty-alert-stats", int(pollerTimeout))
+AlertStatsActor::AlertStatsActor(zsock_t* pipe, const std::string& endpoint, const std::string& address, int64_t pollerTimeout, int64_t metricTTL)
+    : MlmAgent(pipe, endpoint.c_str(), address.c_str(), int(pollerTimeout))
     , m_alertCounts()
     , m_assetQueries()
     , m_outstandingAssetQueries()
@@ -293,15 +293,18 @@ void AlertStatsActor::drainOutstandingAssetQueries()
     const int MAX_OUTSTANDING_QUERIES = 32;
 
     while ((m_outstandingAssetQueries < MAX_OUTSTANDING_QUERIES) && !m_assetQueries.empty()) {
-        log_debug("Query details of asset %s...", m_assetQueries.back().c_str());
-
-        zmsg_t* queryMsg = zmsg_new();
-        zmsg_addstr(queryMsg, "GET");
-        zmsg_addstr(queryMsg, "_ASSET_DETAIL_RESULT");
-        zmsg_addstr(queryMsg, m_assetQueries.back().c_str());
+        const std::string asset{m_assetQueries.back()};
         m_assetQueries.pop_back();
+        log_debug("Query details of asset %s...", asset.c_str());
 
-        if (mlm_client_sendto(client(), "asset-agent", "ASSET_DETAIL", nullptr, 5000, &queryMsg) == 0) {
+        zmsg_t* msg = zmsg_new();
+        zmsg_addstr(msg, "GET");
+        zmsg_addstr(msg, "_ASSET_DETAIL_RESULT");
+        zmsg_addstr(msg, asset.c_str());
+
+        int r = mlm_client_sendto(client(), "asset-agent", "ASSET_DETAIL", nullptr, 5000, &msg);
+        zmsg_destroy(&msg);
+        if (r == 0) {
             m_outstandingAssetQueries++;
         }
     }
@@ -411,21 +414,25 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
 {
     const char* sender        = mlm_client_sender(client());
     const char* subject       = mlm_client_subject(client());
-    char*       actor_command = nullptr;
+    zmsg_t* reply = nullptr;
+    char*   actor_command = nullptr;
 
     // Resend all metrics
     if (streq(subject, "REPUBLISH")) {
-        log_info("Republish query from '%s'.", sender);
-        zmsg_t* reply = zmsg_new();
-
+        log_info("Recv '%s' query from '%s'.", subject, sender);
+        reply = zmsg_new();
         if (isReady()) {
             recomputeAlerts();
             zmsg_addstr(reply, "OK");
         } else {
             zmsg_addstr(reply, "RESYNC");
         }
-
-        mlm_client_sendto(client(), sender, "REPUBLISH", NULL, 5000, &reply);
+    }
+    // Alive signal
+    else if (streq(subject, "ALIVE")) {
+        log_info("Recv '%s' query from '%s'.", subject, sender);
+        reply = zmsg_new();
+        zmsg_addstr(reply, "OK");
     }
     // Result of rfc-alerts-list query to fty-alert-list
     else if (streq(sender, "fty-alert-list") && streq(subject, "rfc-alerts-list")) {
@@ -437,7 +444,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
             zstr_free(&actor_command);
             actor_command = zmsg_popstr(message);
 
-            while (zmsg_size(message)) {
+            while (zmsg_size(message) != 0) {
                 // Inject each alarm into ourselves
                 zmsg_t*      alertMsg   = zmsg_popmsg(message);
                 fty_proto_t* alertProto = fty_proto_decode(&alertMsg);
@@ -445,6 +452,7 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
                     log_debug("Injecting alert '%s' state %s severity %s.", fty_proto_rule(alertProto),
                         fty_proto_state(alertProto), fty_proto_severity(alertProto));
                     processAlert(alertProto);
+                    // **do not destroy alertProto or die**
                 } else {
                     log_error("Couldn't decode alert fty_proto_t message.");
                 }
@@ -467,8 +475,9 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
              * details in order to get the topology. Queue the queries to perform.
              */
             m_outstandingAssetQueries = 0;
-            while (zmsg_size(message)) {
-                m_assetQueries.emplace_back(zmsg_popstr(message));
+            for (char* s = zmsg_popstr(message); s; s = zmsg_popstr(message)) {
+                m_assetQueries.emplace_back(s);
+                zstr_free(&s);
             }
 
             log_info("Received list of %d asset names, querying asset details...", m_assetQueries.size());
@@ -482,11 +491,14 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
 
         if (actor_command && streq(actor_command, "_ASSET_DETAIL_RESULT")) {
             // Inject asset into ourselves
-            zmsg_t*      assetMsg   = zmsg_dup(message);
-            fty_proto_t* assetProto = fty_proto_decode(&assetMsg);
-            if (assetProto) {
-                log_debug("Injecting asset '%s'.", fty_proto_name(assetProto));
-                processAsset(assetProto);
+            zmsg_t* aux = zmsg_dup(message);
+            fty_proto_t* proto = fty_proto_decode(&aux);
+            zmsg_destroy(&aux);
+
+            if (proto) {
+                log_debug("Injecting asset '%s'.", fty_proto_name(proto));
+                processAsset(proto);
+                // **do not destroy proto or die**
             } else {
                 log_error("Couldn't decode asset fty_proto_t message.");
             }
@@ -503,36 +515,47 @@ bool AlertStatsActor::handleMailbox(zmsg_t* message)
         } else {
             log_error("Unexpected mailbox message '%s' from '%s'.", subject, sender);
         }
-    } else {
+    }
+    else {
         log_error("Unexpected mailbox message '%s' from '%s'.", subject, sender);
     }
 
+    if (reply) {
+        int r = mlm_client_sendto(client(), sender, subject, NULL, 1000, &reply);
+        if (r != 0) {
+            log_error("sendTo failed (to: '%s', subject: '%s')", sender, subject);
+        }
+    }
+
+    zmsg_destroy(&reply);
     zstr_free(&actor_command);
+
     return true;
 }
 
 bool AlertStatsActor::handleStream(zmsg_t* message)
 {
-    // On malamute streams we should receive only fty_proto messages
+    // We should receive only fty_proto messages
     if (!fty_proto_is(message)) {
         log_error("Received message is not a fty_proto message.");
-        return true;
     }
+    else {
+        zmsg_t* aux = zmsg_dup(message);
+        fty_proto_t* proto = fty_proto_decode(&aux);
+        zmsg_destroy(&aux);
 
-    zmsg_t*      message_dup      = zmsg_dup(message);
-    fty_proto_t* protocol_message = fty_proto_decode(&message_dup);
-    if (protocol_message == NULL) {
-        log_error("fty_proto_decode() failed, received message could not be parsed.");
-        return true;
-    }
-
-    if (fty_proto_id(protocol_message) == FTY_PROTO_ASSET) {
-        processAsset(protocol_message);
-    } else if (fty_proto_id(protocol_message) == FTY_PROTO_ALERT) {
-        processAlert(protocol_message);
-    } else {
-        log_error("Unexpected fty_proto message.");
-        fty_proto_destroy(&protocol_message);
+        if (!proto) {
+            log_error("fty_proto_decode() failed, received message could not be parsed.");
+        } else if (fty_proto_id(proto) == FTY_PROTO_ASSET) {
+            processAsset(proto);
+            // **do not destroy proto or die**
+        } else if (fty_proto_id(proto) == FTY_PROTO_ALERT) {
+            processAlert(proto);
+            // **do not destroy proto or die**
+        } else {
+            log_error("Unexpected fty_proto message.");
+            fty_proto_destroy(&proto);
+        }
     }
 
     return true;

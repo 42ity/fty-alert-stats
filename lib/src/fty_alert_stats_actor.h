@@ -39,7 +39,7 @@
 class AlertStatsActor : public mlm::MlmAgent, private FtyAlertStateHolder, private FtyAssetStateHolder
 {
 public:
-    AlertStatsActor(zsock_t* pipe, const char* endpoint, int64_t pollerTimeout, int64_t metricTTL);
+    AlertStatsActor(zsock_t* pipe, const std::string& endpoint, const std::string& address, int64_t pollerTimeout, int64_t metricTTL);
     virtual ~AlertStatsActor() = default;
 
 private:

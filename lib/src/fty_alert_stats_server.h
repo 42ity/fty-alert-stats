@@ -26,6 +26,7 @@
 struct AlertStatsActorParams
 {
     std::string endpoint;
+    std::string address;
     int64_t     pollerTimeout;
     int64_t     metricTTL;
 };

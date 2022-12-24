@@ -193,6 +193,7 @@ TEST_CASE("alert stats server test")
     };
 
     const char* endpoint = "inproc://fty-alert-stats-server-test";
+    const char* actorAddress = "alert-stats-server-test";
 
     fty_shm_set_test_dir(".");
 
@@ -200,8 +201,10 @@ TEST_CASE("alert stats server test")
     zactor_t* server = zactor_new(mlm_server, const_cast<char*>("Malamute"));
     REQUIRE(server);
     zstr_sendx(server, "BIND", endpoint, NULL);
+
     AlertStatsActorParams params;
     params.endpoint              = endpoint;
+    params.address               = actorAddress;
     params.metricTTL             = 180;
     params.pollerTimeout         = 720 * 1000;
     zactor_t* alert_stats_server = zactor_new(fty_alert_stats_server, reinterpret_cast<void*>(&params));
@@ -219,7 +222,54 @@ TEST_CASE("alert stats server test")
     REQUIRE(mlm_client_connect(alerts_producer, endpoint, 1000, "alerts_producer") == 0);
     REQUIRE(mlm_client_set_producer(alerts_producer, FTY_PROTO_STREAM_ALERTS) == 0);
 
+    printf("== REPUBLISH request\n");
+    {
+        mlm_client_t* client = assets_producer;
+        zpoller_t* poller = zpoller_new(mlm_client_msgpipe(client), NULL);
+        REQUIRE(poller);
+
+        zmsg_t* msg = zmsg_new();
+        int r = mlm_client_sendto(client, actorAddress, "REPUBLISH", NULL, 1000, &msg);
+        REQUIRE(r == 0);
+        zmsg_destroy(&msg);
+
+        if (zpoller_wait(poller, 5000))
+            { msg = mlm_client_recv(client); }
+        REQUIRE(msg);
+        zmsg_print(msg);
+        char* s = zmsg_popstr(msg);
+        CHECK((s && (streq(s, "OK") || streq(s, "RESYNC"))));
+        zstr_free(&s);
+        zmsg_destroy(&msg);
+
+        zpoller_destroy(&poller);
+    }
+
+    printf("== ALIVE request\n");
+    {
+        mlm_client_t* client = assets_producer;
+        zpoller_t* poller = zpoller_new(mlm_client_msgpipe(client), NULL);
+        REQUIRE(poller);
+
+        zmsg_t* msg = zmsg_new();
+        int r = mlm_client_sendto(client, actorAddress, "ALIVE", NULL, 1000, &msg);
+        REQUIRE(r == 0);
+        zmsg_destroy(&msg);
+
+        if (zpoller_wait(poller, 5000))
+            { msg = mlm_client_recv(client); }
+        REQUIRE(msg);
+        zmsg_print(msg);
+        char* s = zmsg_popstr(msg);
+        CHECK((s && streq(s, "OK")));
+        zstr_free(&s);
+        zmsg_destroy(&msg);
+
+        zpoller_destroy(&poller);
+    }
+
     //  Run test cases
+    printf("== testCases\n");
     for (auto& testCase : testCases) {
         // Inject assets
         for (auto asset : testCase.assets) {
