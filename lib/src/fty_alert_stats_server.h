@@ -27,8 +27,8 @@ struct AlertStatsActorParams
 {
     std::string endpoint;
     std::string address;
-    int64_t     pollerTimeout;
-    int64_t     metricTTL;
+    int64_t     pollerTimeout{0}; // ms
+    int64_t     metricTTL{0}; // sec
 };
 
 //  This is the actor constructor as zactor_fn

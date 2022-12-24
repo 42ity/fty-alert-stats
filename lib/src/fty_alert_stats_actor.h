@@ -99,13 +99,12 @@ private:
 
     AlertCounts              m_alertCounts;
     std::vector<std::string> m_assetQueries;
-    int                      m_outstandingAssetQueries;
-    bool                     m_readyAssets;
-    bool                     m_readyAlerts;
-    int64_t                  m_lastResync;
-
-    int64_t m_metricTTL;
-    int64_t m_pollerTimeout;
+    int                      m_outstandingAssetQueries{0};
+    bool                     m_readyAssets{true};
+    bool                     m_readyAlerts{true};
+    int64_t                  m_lastResync{0}; // sec
+    int64_t                  m_pollerTimeout{0}; // ms
+    int64_t                  m_metricTTL{0}; // sec
 
 public:
     constexpr static const char* WARNING_METRIC  = "alerts.active.warning";
