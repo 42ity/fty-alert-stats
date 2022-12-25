@@ -7,6 +7,6 @@ server
     verbose = 0         #   Do verbose logging of activity?
 
 agent
-    metric_ttl = 720       #   TTL of metrics published
-    tick_period = 180      #   Period of tick, should be <= metric_ttl / 4
-    resync_period = 43200  #   Period of resynchronization
+    metric_ttl = 720       #   TTL of metrics published (sec)
+    poller_timeout = 180   #   Period of tick, should be <= metric_ttl / 4 (sec)
+    resync_period = 43200  #   Period of resynchronization (sec)

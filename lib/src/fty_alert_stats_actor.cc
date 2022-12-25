@@ -251,24 +251,25 @@ bool AlertStatsActor::recomputeAlert(fty_proto_t* alert, fty_proto_t* prevAlert)
     return r;
 }
 
+// write metrics in shared memory
 void AlertStatsActor::sendMetric(AlertCounts::value_type& metric, bool recursive)
 {
     if (!isReady()) {
-        /**
-         * Resynchronizing with the rest of the world. Inhibit sending metrics
-         * until we are ready.
-         */
+        // Resynchronizing with the rest of the world...
+        // Inhibit sending metrics until we are ready.
         return;
     }
 
     // Inhibit metrics for simple devices or fty-outage malfunctions
     const auto& assetId = metric.first;
-
     if (assetId.find("datacenter-") == 0
         || assetId.find("room-") == 0
         || assetId.find("row-") == 0
         || assetId.find("rack-") == 0
     ){
+        log_debug("%s@%s: %d", WARNING_METRIC, assetId.c_str(), metric.second.warning);
+        log_debug("%s@%s: %d", CRITICAL_METRIC, assetId.c_str(), metric.second.critical);
+
         metric.second.lastSent = zclock_time() / 1000;
 
         fty::shm::write_metric(assetId, WARNING_METRIC, std::to_string(metric.second.warning), "", int(m_metricTTL));
