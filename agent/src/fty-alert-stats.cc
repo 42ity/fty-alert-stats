@@ -132,7 +132,7 @@ int main (int argc, char *argv [])
     params.endpoint = MLM_ENDPOINT;
     params.address = AGENT_NAME;
     params.metricTTL = std::stol(metricTTL);
-    params.pollerTimeout = std::stol(pollerTimeout) * 1000;
+    params.pollerTimeout = std::stol(pollerTimeout);
 
     // create stats server
     g_alert_stats_server = zactor_new (fty_alert_stats_server, reinterpret_cast<void*>(&params));

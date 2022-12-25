@@ -103,7 +103,7 @@ private:
     bool                     m_readyAssets{true};
     bool                     m_readyAlerts{true};
     int64_t                  m_lastResync{0}; // sec
-    int64_t                  m_pollerTimeout{0}; // ms
+    int64_t                  m_pollerTimeout{0}; // sec
     int64_t                  m_metricTTL{0}; // sec
 
 public:

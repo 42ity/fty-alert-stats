@@ -34,9 +34,11 @@ void fty_alert_stats_server(zsock_t* pipe, void* args)
     try {
         AlertStatsActor alertStatsServer(pipe, params->endpoint, params->address, params->pollerTimeout, params->metricTTL);
         alertStatsServer.mainloop();
-    } catch (std::runtime_error& e) {
-        log_error("std::runtime_error exception caught, aborting actor (most likely died while initializing).");
-    } catch (...) {
-        log_error("Unexpected exception caught, aborting actor.");
+    }
+    catch (const std::exception& e) {
+        log_error("Exception '%s'", e.what());
+    }
+    catch (...) {
+        log_error("Unexpected exception");
     }
 }

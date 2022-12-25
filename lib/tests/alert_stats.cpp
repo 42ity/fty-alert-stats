@@ -264,8 +264,8 @@ TEST_CASE("alert stats server test")
     AlertStatsActorParams params;
     params.endpoint              = endpoint;
     params.address               = actorAddress;
-    params.metricTTL             = 180;
-    params.pollerTimeout         = 720 * 1000;
+    params.metricTTL             = 180; // sec
+    params.pollerTimeout         = 720; // sec
     zactor_t* alert_stats_server = zactor_new(fty_alert_stats_server, reinterpret_cast<void*>(&params));
     REQUIRE(alert_stats_server);
 

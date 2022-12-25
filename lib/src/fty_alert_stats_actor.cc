@@ -25,7 +25,7 @@
 #include <stdexcept>
 
 AlertStatsActor::AlertStatsActor(zsock_t* pipe, const std::string& endpoint, const std::string& address, int64_t pollerTimeout, int64_t metricTTL)
-    : MlmAgent(pipe, endpoint.c_str(), address.c_str(), int(pollerTimeout))
+    : MlmAgent(pipe, endpoint.c_str(), address.c_str(), int(pollerTimeout) * 1000)
     , m_alertCounts()
     , m_assetQueries()
     , m_outstandingAssetQueries()
@@ -41,19 +41,16 @@ AlertStatsActor::AlertStatsActor(zsock_t* pipe, const std::string& endpoint, con
         m_pollerTimeout,
         m_metricTTL);
 
-    if (mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ASSETS, ".*") == -1) {
+    int r = mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ASSETS, ".*");
+    if (r != 0) {
         log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ASSETS, ".*");
         throw std::runtime_error("Can't set client consumer");
     }
 
-    if (mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ALERTS, ".*") == -1) {
+    r = mlm_client_set_consumer(client(), FTY_PROTO_STREAM_ALERTS, ".*");
+    if (r != 0) {
         log_error("mlm_client_set_consumer(stream = '%s', pattern = '%s') failed.", FTY_PROTO_STREAM_ALERTS, ".*");
         throw std::runtime_error("Can't set client consumer");
-    }
-
-    if (mlm_client_set_producer(client(), FTY_PROTO_STREAM_METRICS) == -1) {
-        log_error("mlm_client_set_producer(stream = '%s') failed.", FTY_PROTO_STREAM_METRICS);
-        throw std::runtime_error("Can't set client producer");
     }
 }
 
@@ -379,7 +376,7 @@ bool AlertStatsActor::tick()
      * As a safety precaution, unwedge the agent if it's stuck resynchronizing
      * for at least one complete poller timespan.
      */
-    if (!isReady() && ((zclock_mono() / 1000) > (m_lastResync + (m_pollerTimeout / 1000) * 2))) {
+    if (!isReady() && ((zclock_mono() / 1000) > (m_lastResync + m_pollerTimeout * 2))) {
         log_info("Agent was stuck resynchronizing data when entering tick, unwedging it...");
         m_readyAssets = true;
         m_readyAlerts = true;
