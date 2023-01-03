@@ -23,9 +23,12 @@
 
 static void fty_proto_destroy_wrapper(fty_proto_t* p)
 {
-    fty_proto_destroy(&p);
+    if (p) {
+        fty_proto_destroy(&p);
+    }
 }
 
+// take ownership on asset
 void FtyAssetStateHolder::processAsset(fty_proto_t* asset)
 {
     FtyProto ftyProto(asset, fty_proto_destroy_wrapper);
@@ -48,6 +51,7 @@ void FtyAssetStateHolder::processAsset(fty_proto_t* asset)
     }
 }
 
+// take ownership on alert
 void FtyAlertStateHolder::processAlert(fty_proto_t* alert)
 {
     FtyProto ftyProto(alert, fty_proto_destroy_wrapper);

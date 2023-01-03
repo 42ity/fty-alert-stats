@@ -39,7 +39,7 @@
 class AlertStatsActor : public mlm::MlmAgent, private FtyAlertStateHolder, private FtyAssetStateHolder
 {
 public:
-    AlertStatsActor(zsock_t* pipe, const char* endpoint, int64_t pollerTimeout, int64_t metricTTL);
+    AlertStatsActor(zsock_t* pipe, const std::string& endpoint, const std::string& address, int64_t pollerTimeout, int64_t metricTTL);
     virtual ~AlertStatsActor() = default;
 
 private:
@@ -99,13 +99,12 @@ private:
 
     AlertCounts              m_alertCounts;
     std::vector<std::string> m_assetQueries;
-    int                      m_outstandingAssetQueries;
-    bool                     m_readyAssets;
-    bool                     m_readyAlerts;
-    int64_t                  m_lastResync;
-
-    int64_t m_metricTTL;
-    int64_t m_pollerTimeout;
+    int                      m_outstandingAssetQueries{0};
+    bool                     m_readyAssets{true};
+    bool                     m_readyAlerts{true};
+    int64_t                  m_lastResync{0}; // sec
+    int64_t                  m_pollerTimeout{0}; // sec
+    int64_t                  m_metricTTL{0}; // sec
 
 public:
     constexpr static const char* WARNING_METRIC  = "alerts.active.warning";
