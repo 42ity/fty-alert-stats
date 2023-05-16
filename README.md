@@ -61,7 +61,7 @@ active alerts on the asset (and, if applicable, all child assets combined).
 
 ### Published alerts
 
-Agent does not publish alerts.
+Agent does not publish any alert.
 
 ### Mailbox requests
 
